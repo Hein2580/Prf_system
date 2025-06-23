@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Ambulance PRF System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>🚑 Ambulance PRF System</h1>
+        <p>Emergency Medical Services Management</p>
+    </header>
+    
+    <nav style="justify-content: center;">
+        <a href="landing.html">Home</a>
+    </nav>
+    
+    <main style="max-width: 400px; margin: 2rem auto;">
+        <div class="form-section">
+            <h2 style="text-align: center; margin-bottom: 2rem;">Login</h2>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="btn-primary" style="width: 100%;">Login</button>
+                </div>
+            </form>
+            
+            <div style="margin-top: 2rem; padding: 1rem; background: #f0f8ff; border-radius: 6px; font-size: 0.9rem;">
+                <h4 style="margin: 0 0 0.5rem 0;">Demo Accounts:</h4>
+                <p style="margin: 0.25rem 0;"><strong>Admin:</strong> admin / admin123</p>
+                <p style="margin: 0.25rem 0;"><strong>Paramedic:</strong> paramedic / password123</p>
+                <p style="margin: 0.25rem 0;"><strong>EMT:</strong> emt / emt123</p>
+            </div>
+        </div>
+        
+        <div id="ambulanceSelection" style="display:none;">
+            <h3 style="color: #1976d2; margin-bottom: 1rem;">Select Your Ambulance</h3>
+            <div id="ambulanceList" style="display: grid; gap: 0.5rem;"></div>
+            <button onclick="proceedToDashboard()" class="btn-primary" style="width: 100%; margin-top: 1rem;">Continue</button>
+        </div>
+    </main>
+    
+    <script src="tools.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            const users = [
+                { username: 'admin', password: 'admin123', role: 'admin', name: 'Administrator' },
+                { username: 'paramedic', password: 'password123', role: 'paramedic', name: 'John Paramedic' },
+                { username: 'emt', password: 'emt123', role: 'emt', name: 'Jane EMT' }
+            ];
+            
+            const user = users.find(u => u.username === username && u.password === password);
+            
+            if (user) {
+                // Set login time
+                user.loginTime = new Date().toISOString();
+                
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                
+                if (user.role === 'admin') {
+                    window.location.href = 'dashboard.html';
+                } else {
+                    showAmbulanceSelection();
+                }
+            } else {
+                await showAlert('Invalid username or password');
+            }
+        });
+        
+        function showAmbulanceSelection() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('ambulanceSelection').style.display = 'block';
+            
+            const ambulances = getAmbulances();
+            const ambulanceList = document.getElementById('ambulanceList');
+            
+            if (ambulances.length === 0) {
+                ambulanceList.innerHTML = '<p>No ambulances available. Contact administrator.</p>';
+                return;
+            }
+            
+            ambulanceList.innerHTML = ambulances.map(amb => `
+                <label style="display: flex; align-items: center; padding: 1rem; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #fafafa;">
+                    <input type="radio" name="selectedAmbulance" value="${amb.callSign}" style="margin-right: 1rem; transform: scale(1.2);">
+                    <div style="flex: 1;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                            <strong style="font-size: 1.1rem; color: #1976d2;">${amb.callSign}</strong>
+                            <span style="background: #e3f2fd; color: #1976d2; padding: 0.2rem 0.5rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">${amb.type || 'Standard'}</span>
+                        </div>
+                        <div style="font-size: 0.9rem; color: #666;">
+                            📍 ${amb.location || 'Base Station'} • 
+                            <span style="color: ${amb.status === 'Available' ? '#4caf50' : '#ff9800'};">●</span>
+                            ${amb.status}
+                        </div>
+                    </div>
+                </label>
+            `).join('');
+            
+            // Add hover effects
+            const style = document.createElement('style');
+            style.textContent = `
+                #ambulanceList label:hover {
+                    border-color: #1976d2 !important;
+                    background: #f0f8ff !important;
+                    transform: translateY(-1px);
+                    box-shadow: 0 2px 8px rgba(25, 118, 210, 0.15);
+                }
+            `;
+            document.head.appendChild(style);
+            
+            ambulanceList.addEventListener('change', function(e) {
+                if (e.target.name === 'selectedAmbulance') {
+                    document.querySelectorAll('#ambulanceList label').forEach(label => {
+                        label.style.borderColor = '#ddd';
+                        label.style.backgroundColor = '#fafafa';
+                        label.style.boxShadow = 'none';
+                    });
+                    const selectedLabel = e.target.closest('label');
+                    selectedLabel.style.borderColor = '#1976d2';
+                    selectedLabel.style.backgroundColor = '#e3f2fd';
+                    selectedLabel.style.boxShadow = '0 2px 12px rgba(25, 118, 210, 0.25)';
+                }
+            });
+        }
+        
+        async function proceedToDashboard() {
+            const selectedAmbulance = document.querySelector('input[name="selectedAmbulance"]:checked');
+            
+            if (!selectedAmbulance) {
+                await showAlert('Please select an ambulance');
+                return;
+            }
+            
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            currentUser.assignedAmbulance = selectedAmbulance.value;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            window.location.href = 'dashboard.html';
+        }
+        
+        if (localStorage.getItem('isLoggedIn') === 'true') {
+            window.location.href = 'dashboard.html';
+        }
+    </script>
+</body>
+</html> 

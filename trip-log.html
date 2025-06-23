@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambulance Trip Log</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .trip-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .trip-section {
+            background: #f8f9fa;
+            margin: 1rem 0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #1976d2;
+        }
+        .trip-section h3 {
+            margin-top: 0;
+            color: #1976d2;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 0.5rem;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group label {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+            font-size: 0.9rem;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+        .time-input {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 0.5rem;
+        }
+        .mileage-display {
+            background: #e3f2fd;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #1976d2;
+        }
+        .mileage-display h4 {
+            margin: 0 0 0.5rem 0;
+            color: #1976d2;
+        }
+        .mileage-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #0d47a1;
+        }
+        .trip-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .status-active {
+            background: #4caf50;
+            color: white;
+        }
+        .status-completed {
+            background: #2196f3;
+            color: white;
+        }
+        .status-cancelled {
+            background: #f44336;
+            color: white;
+        }
+        .trip-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .summary-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        .summary-card h4 {
+            margin: 0 0 0.5rem 0;
+            color: #1976d2;
+            font-size: 0.9rem;
+        }
+        .summary-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+        }
+        .dark-mode .trip-section {
+            background: #3d3d3d;
+        }
+        .dark-mode .summary-card {
+            background: #3d3d3d;
+            border-color: #555;
+        }
+        .dark-mode .mileage-display {
+            background: #2d3748;
+            border-color: #4a90e2;
+        }
+        .crew-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        .maintenance-log {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 0.5rem;
+        }
+        .maintenance-item {
+            padding: 0.5rem;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .maintenance-item:last-child {
+            border-bottom: none;
+        }
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #1976d2;
+            background: white;
+            color: #1976d2;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .filter-btn.active,
+        .filter-btn:hover {
+            background: #1976d2;
+            color: white;
+        }
+        .status-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+            justify-content: center;
+        }
+        .status-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 120px;
+        }
+        .status-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .status-dispatched {
+            background: #ff9800;
+            color: white;
+        }
+        .status-enroute {
+            background: #2196f3;
+            color: white;
+        }
+        .status-onscene {
+            background: #9c27b0;
+            color: white;
+        }
+        .status-hospital {
+            background: #4caf50;
+            color: white;
+        }
+        .status-available {
+            background: #607d8b;
+            color: white;
+        }
+        .status-timestamp {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+            border-left: 4px solid #1976d2;
+        }
+        .timestamp-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 0.5rem 0;
+            padding: 0.5rem;
+            background: white;
+            border-radius: 4px;
+        }
+        .timestamp-label {
+            font-weight: bold;
+            color: #1976d2;
+        }
+        .timestamp-value {
+            color: #666;
+            font-family: monospace;
+        }
+        .dark-mode .status-timestamp {
+            background: #3d3d3d;
+        }
+        .dark-mode .timestamp-entry {
+            background: #2d2d2d;
+            color: #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Ambulance Trip Log</h1>
+        <p>Comprehensive Trip Tracking & Vehicle Management</p>
+    </header>
+    <nav>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="ambulance-directory.html">Ambulance Directory</a>
+        <a href="checklist.html">Checklist</a>
+                        <a href="prf-form.html">PRF Form</a>
+        <a href="trip-log.html" class="active">Trip Log</a>
+        <a href="settings.html">Settings</a>
+        <button id="logoutBtn" style="background:#b71c1c;margin-left:auto;">Logout</button>
+    </nav>
+    <main class="trip-container">
+
+        <div class="trip-section">
+            <h3>Today's Summary</h3>
+            <div class="trip-summary" id="tripSummary">
+                <div class="summary-card">
+                    <h4>Active Trips</h4>
+                    <div class="summary-value" id="activeTrips">0</div>
+                </div>
+                <div class="summary-card">
+                    <h4>Completed Trips</h4>
+                    <div class="summary-value" id="completedTrips">0</div>
+                </div>
+                <div class="summary-card">
+                                    <h4>Total Kilometers</h4>
+                <div class="summary-value" id="totalKilometers">0</div>
+                </div>
+                <div class="summary-card">
+                    <h4>Fuel Used</h4>
+                    <div class="summary-value" id="fuelUsed">0 gal</div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="trip-section">
+            <h3>🚨 Quick Start Trip</h3>
+            <div class="status-buttons" style="justify-content: center; margin: 2rem 0;">
+                <button type="button" id="quickEmergency" class="status-btn" style="background: #f44336; color: white; font-size: 1.2rem; padding: 1rem 2rem;">
+                    🚨 EMERGENCY CALL
+                </button>
+                <button type="button" id="quickTransport" class="status-btn" style="background: #2196f3; color: white; font-size: 1.2rem; padding: 1rem 2rem;">
+                    🏥 TRANSPORT
+                </button>
+                <button type="button" id="quickTraining" class="status-btn" style="background: #4caf50; color: white; font-size: 1.2rem; padding: 1rem 2rem;">
+                    📚 TRAINING
+                </button>
+            </div>
+            <p style="text-align: center; color: #666; font-style: italic;">One-click trip start with automatic date/time capture</p>
+        </div>
+
+
+        <div class="trip-section" id="manualTripForm" style="display: none;">
+            <h3>Manual Trip Entry</h3>
+            <form id="tripForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tripType">Trip Type</label>
+                        <select id="tripType" name="tripType" required>
+                            <option value="Emergency Call">Emergency Call</option>
+                            <option value="Non-Emergency Transport">Non-Emergency Transport</option>
+                            <option value="Interfacility Transfer">Interfacility Transfer</option>
+                            <option value="Standby">Standby</option>
+                            <option value="Training">Training</option>
+                            <option value="Maintenance">Maintenance</option>
+                            <option value="Fuel Run">Fuel Run</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="destination">Destination (Optional)</label>
+                        <input type="text" id="destination" name="destination" placeholder="Will be updated later">
+                    </div>
+                </div>
+                <div style="text-align: center; margin: 1rem 0;">
+                    <button type="submit" id="startTripBtn">Start Manual Trip</button>
+                    <button type="button" id="cancelManualTrip" style="background: #666; margin-left: 1rem;">Cancel</button>
+                </div>
+            </form>
+        </div>
+        
+        <div style="text-align: center; margin: 1rem 0;">
+            <button type="button" id="showManualForm" style="background: #666; color: white; padding: 0.5rem 1rem;">Manual Entry</button>
+        </div>
+
+
+        <div class="trip-section" id="dispatchStatusSection" style="display:none;">
+            <h3>Dispatch Status</h3>
+            <div class="status-buttons">
+                <button type="button" id="statusDispatched" class="status-btn status-dispatched">Dispatched</button>
+                <button type="button" id="statusEnroute" class="status-btn status-enroute" disabled>En Route</button>
+                <button type="button" id="statusOnScene" class="status-btn status-onscene" disabled>On Scene</button>
+                <button type="button" id="statusAtHospital" class="status-btn status-hospital" disabled>At Hospital</button>
+                <button type="button" id="statusAvailable" class="status-btn status-available" disabled>Available</button>
+            </div>
+            
+            <div class="status-timestamp" id="timestampLog">
+                <h4 style="margin-top: 0; color: #1976d2;">Trip Timeline</h4>
+                <div id="timestampEntries">
+                    <div class="timestamp-entry">
+                        <span class="timestamp-label">Trip Started:</span>
+                        <span class="timestamp-value" id="tripStartTimestamp">--:--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="trip-section" id="endTripSection" style="display:none;">
+            <h3>End Trip</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="endMileage">Ending Odometer (Optional)</label>
+                    <input type="number" id="endMileage" step="0.1" placeholder="Enter if known">
+                </div>
+                <div class="form-group">
+                    <label for="tripNotes">Trip Notes (Optional)</label>
+                    <textarea id="tripNotes" rows="2" placeholder="Brief notes about the trip..."></textarea>
+                </div>
+            </div>
+            <div style="text-align: center; margin: 1rem 0;">
+                <button type="button" id="endTripBtn" style="background: #4caf50; color: white; font-size: 1.1rem; padding: 0.75rem 2rem;">
+                    ✅ Complete Trip
+                </button>
+                <button type="button" id="cancelTripBtn" style="background:#f44336; color: white; margin-left:1rem; padding: 0.75rem 2rem;">
+                    ❌ Cancel Trip
+                </button>
+            </div>
+            <p style="text-align: center; color: #666; font-style: italic; font-size: 0.9rem;">
+                End time will be automatically captured when you click Complete Trip
+            </p>
+        </div>
+
+
+        <div class="trip-section">
+            <h3>Active Trips</h3>
+            <div id="activeTripsContainer">
+                <div style="text-align: center; color: #666; font-style: italic; padding: 2rem;">
+                    No active trips
+                </div>
+            </div>
+        </div>
+
+
+        <div class="trip-section">
+            <h3>Trip History</h3>
+            <input type="text" id="tripSearch" placeholder="Search by ambulance, driver, or destination..." style="width:100%;margin-bottom:1rem;">
+            <div class="btn-group" style="margin-bottom: 1rem;">
+                <button type="button" onclick="filterTrips('all')" class="filter-btn active">All</button>
+                <button type="button" onclick="filterTrips('Emergency Call')" class="filter-btn">Emergency</button>
+                <button type="button" onclick="filterTrips('Non-Emergency Transport')" class="filter-btn">Non-Emergency</button>
+                <button type="button" onclick="filterTrips('Training')" class="filter-btn">Training</button>
+                <button type="button" onclick="filterTrips('Maintenance')" class="filter-btn">Maintenance</button>
+            </div>
+            <table id="tripTable">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Ambulance</th>
+                        <th>Type</th>
+                        <th>Driver</th>
+                        <th>Destination</th>
+                        <th>Kilometers</th>
+                        <th>Status</th>
+                        <th>Current Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+    
+                </tbody>
+            </table>
+        </div>
+
+
+        <div class="trip-section">
+            <h3>Maintenance & Fuel Log</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="maintenanceAmbulance">Ambulance</label>
+                    <select id="maintenanceAmbulance"></select>
+                </div>
+                <div class="form-group">
+                    <label for="maintenanceType">Type</label>
+                    <select id="maintenanceType">
+                        <option value="Fuel">Fuel</option>
+                        <option value="Oil Change">Oil Change</option>
+                        <option value="Tire Rotation">Tire Rotation</option>
+                        <option value="Brake Service">Brake Service</option>
+                        <option value="Battery">Battery</option>
+                        <option value="Inspection">Inspection</option>
+                        <option value="Repair">Repair</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="maintenanceCost">Cost (R)</label>
+                    <input type="number" id="maintenanceCost" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="maintenanceNotes">Notes</label>
+                    <input type="text" id="maintenanceNotes" placeholder="Description...">
+                </div>
+            </div>
+            <div style="text-align: center; margin: 1rem 0;">
+                <button type="button" id="addMaintenanceBtn">Add Maintenance Record</button>
+            </div>
+            <div class="maintenance-log" id="maintenanceLog">
+                <div style="text-align: center; color: #666; font-style: italic; padding: 1rem;">
+                    No maintenance records
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="tools.js"></script>
+    <script>
+        let currentTrip = null;
+        let currentFilter = 'all';
+        let currentDispatchStatus = 'started';
+
+        // Data management functions
+        function getTrips() {
+            return JSON.parse(localStorage.getItem('trips') || '[]');
+        }
+        function saveTrips(trips) {
+            localStorage.setItem('trips', JSON.stringify(trips));
+        }
+        function getAmbulances() {
+            return JSON.parse(localStorage.getItem('ambulances') || '[]');
+        }
+        function getMaintenance() {
+            return JSON.parse(localStorage.getItem('maintenance') || '[]');
+        }
+        function saveMaintenance(maintenance) {
+            localStorage.setItem('maintenance', JSON.stringify(maintenance));
+        }
+
+        // Get current user's ambulance
+        function getCurrentUserAmbulance() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            return currentUser.assignedAmbulance || null;
+        }
+
+        // Get current user info
+        function getCurrentUser() {
+            return JSON.parse(localStorage.getItem('currentUser') || '{}');
+        }
+
+        // Initialize ambulance selects (for maintenance only now)
+        function populateAmbulanceSelects() {
+            const ambulances = getAmbulances();
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            const select = document.getElementById('maintenanceAmbulance');
+            
+            select.innerHTML = '<option value="">Select Ambulance</option>';
+            
+            if (currentUser.role === 'Administrator') {
+                // Admin can see all ambulances
+                ambulances.forEach(amb => {
+                    const option = document.createElement('option');
+                    option.value = amb.callSign;
+                    option.textContent = amb.callSign;
+                    select.appendChild(option);
+                });
+            } else if (currentUser.assignedAmbulance) {
+                // Paramedic/EMT can only see their assigned ambulance
+                const option = document.createElement('option');
+                option.value = currentUser.assignedAmbulance;
+                option.textContent = currentUser.assignedAmbulance;
+                option.selected = true;
+                select.appendChild(option);
+                select.disabled = true; // Disable selection for non-admin users
+            }
+        }
+
+        // Quick start trip function
+        async function quickStartTrip(tripType) {
+            const currentUser = getCurrentUser();
+            const ambulance = getCurrentUserAmbulance();
+            
+            if (!ambulance) {
+                await showAlert('No ambulance assigned. Please contact administrator.', 'No Ambulance Assigned');
+                return;
+            }
+            
+            // Auto-capture current date and time
+            const now = new Date();
+            const tripData = {
+                ambulanceUnit: ambulance,
+                tripDate: now.toISOString().split('T')[0],
+                startTime: now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                tripType: tripType,
+                destination: 'TBD', // To Be Determined
+                driver: currentUser.name,
+                attendant: '',
+                supervisor: '',
+                trainee: '',
+                fuelLevel: 75, // Default
+                vehicleCondition: 'Good', // Default
+                defects: '',
+                purpose: `Quick start ${tripType.toLowerCase()}`,
+                status: 'active',
+                id: Date.now(),
+                timestamp: now.toISOString(),
+                startMileage: 0 // Will be updated later
+            };
+            
+            const trips = getTrips();
+            trips.push(tripData);
+            saveTrips(trips);
+            
+            currentTrip = tripData;
+            showDispatchStatusSection();
+            updateTripDisplay();
+            clearEndTripForm();
+            
+            // Initialize timestamp log
+            updateTimestampLog();
+            
+            // Show success message with trip details
+            const successMsg = `${tripType} started!\n\nAmbulance: ${ambulance}\nTime: ${tripData.startTime}\nDriver: ${currentUser.name}`;
+            await showAlert(successMsg, 'Trip Started');
+        }
+
+        // Quick start button handlers
+        document.getElementById('quickEmergency').addEventListener('click', function() {
+            quickStartTrip('Emergency Call');
+        });
+
+        document.getElementById('quickTransport').addEventListener('click', function() {
+            quickStartTrip('Non-Emergency Transport');
+        });
+
+        document.getElementById('quickTraining').addEventListener('click', function() {
+            quickStartTrip('Training');
+        });
+
+        // Manual form handlers
+        document.getElementById('showManualForm').addEventListener('click', function() {
+            document.getElementById('manualTripForm').style.display = 'block';
+            this.style.display = 'none';
+        });
+
+        document.getElementById('cancelManualTrip').addEventListener('click', function() {
+            document.getElementById('manualTripForm').style.display = 'none';
+            document.getElementById('showManualForm').style.display = 'inline-block';
+        });
+
+        // Manual trip form handling
+        document.getElementById('tripForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const currentUser = getCurrentUser();
+            const ambulance = getCurrentUserAmbulance();
+            
+            if (!ambulance) {
+                await showAlert('No ambulance assigned. Please contact administrator.', 'No Ambulance Assigned');
+                return;
+            }
+            
+            // Auto-capture current date and time
+            const now = new Date();
+            const tripData = {
+                ambulanceUnit: ambulance,
+                tripDate: now.toISOString().split('T')[0],
+                startTime: now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                tripType: document.getElementById('tripType').value,
+                destination: document.getElementById('destination').value || 'TBD',
+                driver: currentUser.name,
+                attendant: '',
+                supervisor: '',
+                trainee: '',
+                fuelLevel: 75, // Default
+                vehicleCondition: 'Good', // Default
+                defects: '',
+                purpose: 'Manual entry',
+                status: 'active',
+                id: Date.now(),
+                timestamp: now.toISOString(),
+                startMileage: 0 // Will be updated later
+            };
+            
+            const trips = getTrips();
+            trips.push(tripData);
+            saveTrips(trips);
+            
+            currentTrip = tripData;
+            showDispatchStatusSection();
+            updateTripDisplay();
+            clearEndTripForm();
+            this.reset();
+            
+            // Hide manual form
+            document.getElementById('manualTripForm').style.display = 'none';
+            document.getElementById('showManualForm').style.display = 'inline-block';
+            
+            // Initialize timestamp log
+            updateTimestampLog();
+            
+            await showAlert('Trip started successfully!', 'Trip Started');
+        });
+
+        // End trip functionality
+        document.getElementById('endTripBtn').addEventListener('click', async function() {
+            if (!currentTrip) return;
+            
+            // Auto-capture end time
+            const now = new Date();
+            const endTime = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            const endMileage = document.getElementById('endMileage').value;
+            const tripNotes = document.getElementById('tripNotes').value;
+            
+            const trips = getTrips();
+            const tripIndex = trips.findIndex(t => t.id === currentTrip.id);
+            
+            if (tripIndex !== -1) {
+                trips[tripIndex].endTime = endTime;
+                trips[tripIndex].endMileage = endMileage ? parseFloat(endMileage) : 0;
+                trips[tripIndex].tripNotes = tripNotes;
+                trips[tripIndex].status = 'completed';
+                trips[tripIndex].endTimestamp = now.toISOString();
+                
+                            // Calculate total kilometers if both start and end mileage are provided
+            if (endMileage && trips[tripIndex].startMileage) {
+                trips[tripIndex].totalKilometers = (parseFloat(endMileage) - parseFloat(trips[tripIndex].startMileage)).toFixed(1);
+            } else {
+                trips[tripIndex].totalKilometers = 'N/A';
+            }
+                
+                // Add completion timestamp
+                addTimestampEntry('Trip Completed', endTime);
+                
+                saveTrips(trips);
+                currentTrip = null;
+                hideDispatchStatusSection();
+                updateTripDisplay();
+                
+                await showAlert(`Trip completed successfully!\nEnd Time: ${endTime}`, 'Trip Completed');
+            }
+        });
+
+        // Cancel trip
+        document.getElementById('cancelTripBtn').addEventListener('click', async function() {
+            if (!currentTrip) return;
+            
+            if (await showConfirm('Are you sure you want to cancel this trip?', 'Cancel Trip')) {
+                const trips = getTrips();
+                const tripIndex = trips.findIndex(t => t.id === currentTrip.id);
+                
+                if (tripIndex !== -1) {
+                    trips[tripIndex].status = 'cancelled';
+                    saveTrips(trips);
+                }
+                
+                currentTrip = null;
+                hideDispatchStatusSection();
+                updateTripDisplay();
+                
+                await showAlert('Trip cancelled', 'Trip Cancelled');
+            }
+        });
+
+        // Show/hide dispatch status section
+        function showDispatchStatusSection() {
+            document.getElementById('dispatchStatusSection').style.display = 'block';
+            document.getElementById('startTripBtn').textContent = 'Trip In Progress';
+            document.getElementById('startTripBtn').disabled = true;
+            currentDispatchStatus = 'started';
+            setupDispatchButtons();
+        }
+
+        function hideDispatchStatusSection() {
+            document.getElementById('dispatchStatusSection').style.display = 'none';
+            document.getElementById('endTripSection').style.display = 'none';
+            document.getElementById('startTripBtn').textContent = 'Start Trip';
+            document.getElementById('startTripBtn').disabled = false;
+            currentDispatchStatus = 'started';
+            
+            // Clear end trip form
+            document.getElementById('endHour').value = '';
+            document.getElementById('endMin').value = '';
+            document.getElementById('endMileage').value = '';
+            document.getElementById('endFuelLevel').value = '';
+            document.getElementById('tripNotes').value = '';
+        }
+
+        // Show/hide end trip section
+        function showEndTripSection() {
+            document.getElementById('endTripSection').style.display = 'block';
+        }
+
+        function hideEndTripSection() {
+            document.getElementById('endTripSection').style.display = 'none';
+        }
+
+        // Setup dispatch status buttons
+        function setupDispatchButtons() {
+            // Reset all buttons
+            const buttons = ['statusDispatched', 'statusEnroute', 'statusOnScene', 'statusAtHospital', 'statusAvailable'];
+            buttons.forEach(btnId => {
+                const btn = document.getElementById(btnId);
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+            });
+            
+            // Enable first button
+            document.getElementById('statusDispatched').disabled = false;
+            document.getElementById('statusDispatched').style.opacity = '1';
+        }
+
+        // Update timestamp log
+        function updateTimestampLog() {
+            if (!currentTrip) return;
+            
+            const startTime = `${currentTrip.startTime}`;
+            document.getElementById('tripStartTimestamp').textContent = startTime;
+        }
+
+        // Add timestamp entry
+        function addTimestampEntry(label, timestamp) {
+            const container = document.getElementById('timestampEntries');
+            const entry = document.createElement('div');
+            entry.className = 'timestamp-entry';
+            entry.innerHTML = `
+                <span class="timestamp-label">${label}:</span>
+                <span class="timestamp-value">${timestamp}</span>
+            `;
+            container.appendChild(entry);
+        }
+
+        // Get current timestamp
+        function getCurrentTimestamp() {
+            const now = new Date();
+            return now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+        }
+
+        // Handle dispatch status changes
+        function handleDispatchStatus(status, label, nextButtonId) {
+            if (!currentTrip) return;
+            
+            const timestamp = getCurrentTimestamp();
+            addTimestampEntry(label, timestamp);
+            
+            // Update trip data
+            const trips = getTrips();
+            const tripIndex = trips.findIndex(t => t.id === currentTrip.id);
+            if (tripIndex !== -1) {
+                if (!trips[tripIndex].timestamps) trips[tripIndex].timestamps = {};
+                trips[tripIndex].timestamps[status] = timestamp;
+                trips[tripIndex].currentStatus = status;
+                saveTrips(trips);
+                currentTrip = trips[tripIndex];
+            }
+            
+            // Disable current button and enable next
+            event.target.disabled = true;
+            event.target.style.opacity = '0.5';
+            
+            if (nextButtonId) {
+                const nextBtn = document.getElementById(nextButtonId);
+                nextBtn.disabled = false;
+                nextBtn.style.opacity = '1';
+            }
+            
+            // Show end trip section when available
+            if (status === 'available') {
+                showEndTripSection();
+            }
+            
+            currentDispatchStatus = status;
+        }
+
+        // Dispatch status button handlers
+        document.getElementById('statusDispatched').addEventListener('click', function() {
+            handleDispatchStatus('dispatched', 'Dispatched', 'statusEnroute');
+        });
+
+        document.getElementById('statusEnroute').addEventListener('click', function() {
+            handleDispatchStatus('enroute', 'En Route', 'statusOnScene');
+        });
+
+        document.getElementById('statusOnScene').addEventListener('click', function() {
+            handleDispatchStatus('onscene', 'On Scene', 'statusAtHospital');
+        });
+
+        document.getElementById('statusAtHospital').addEventListener('click', function() {
+            handleDispatchStatus('athospital', 'At Hospital', 'statusAvailable');
+        });
+
+        document.getElementById('statusAvailable').addEventListener('click', function() {
+            handleDispatchStatus('available', 'Available', null);
+        });
+
+        // Update trip displays
+        function updateTripDisplay() {
+            updateTripSummary();
+            updateActiveTrips();
+            updateTripTable();
+        }
+
+        function updateTripSummary() {
+            const trips = getTrips();
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            const today = new Date().toISOString().split('T')[0];
+            
+            // Filter trips based on user role
+            let todayTrips = trips.filter(trip => trip.tripDate === today);
+            if (currentUser.role !== 'Administrator' && currentUser.assignedAmbulance) {
+                todayTrips = todayTrips.filter(trip => trip.ambulanceUnit === currentUser.assignedAmbulance);
+            }
+            
+            const activeTrips = todayTrips.filter(trip => trip.status === 'active').length;
+            const completedTrips = todayTrips.filter(trip => trip.status === 'completed').length;
+            const totalKilometers = todayTrips.reduce((sum, trip) => sum + (parseFloat(trip.totalKilometers) || 0), 0);
+            const fuelUsed = todayTrips.reduce((sum, trip) => sum + (parseFloat(trip.fuelUsed) || 0), 0);
+            
+            document.getElementById('activeTrips').textContent = activeTrips;
+            document.getElementById('completedTrips').textContent = completedTrips;
+            document.getElementById('totalKilometers').textContent = totalKilometers.toFixed(1);
+            document.getElementById('fuelUsed').textContent = fuelUsed.toFixed(1) + ' L';
+        }
+
+        function updateActiveTrips() {
+            const trips = getTrips();
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            
+            // Filter active trips based on user role
+            let activeTrips = trips.filter(trip => trip.status === 'active');
+            if (currentUser.role !== 'Administrator' && currentUser.assignedAmbulance) {
+                activeTrips = activeTrips.filter(trip => trip.ambulanceUnit === currentUser.assignedAmbulance);
+            }
+            
+            const container = document.getElementById('activeTripsContainer');
+            
+            if (activeTrips.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #666; font-style: italic; padding: 2rem;">No active trips</div>';
+                return;
+            }
+            
+            container.innerHTML = activeTrips.map(trip => {
+                const currentStatus = trip.currentStatus || 'started';
+                const statusColors = {
+                    'started': '#4caf50',
+                    'dispatched': '#ff9800',
+                    'enroute': '#2196f3',
+                    'onscene': '#9c27b0',
+                    'athospital': '#4caf50',
+                    'available': '#607d8b'
+                };
+                const statusLabels = {
+                    'started': 'Started',
+                    'dispatched': 'Dispatched',
+                    'enroute': 'En Route',
+                    'onscene': 'On Scene',
+                    'athospital': 'At Hospital',
+                    'available': 'Available'
+                };
+                
+                return `
+                    <div style="background: white; padding: 1rem; margin: 0.5rem 0; border-radius: 8px; border-left: 4px solid ${statusColors[currentStatus]};">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong>${trip.ambulanceUnit}</strong> - ${trip.tripType}
+                                <br><small>Driver: ${trip.driver} | Started: ${trip.startTime}</small>
+                                <br><small>Destination: ${trip.destination}</small>
+                            </div>
+                            <div style="text-align: right;">
+                                <span class="trip-status" style="background: ${statusColors[currentStatus]}; color: white; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: bold;">${statusLabels[currentStatus]}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateTripTable() {
+            const trips = getTrips();
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            const search = document.getElementById('tripSearch').value.toLowerCase();
+            const tbody = document.querySelector('#tripTable tbody');
+            tbody.innerHTML = '';
+            
+            const filteredTrips = trips.filter(trip => {
+                // Filter by user role first
+                const isVisible = currentUser.role === 'Administrator' || 
+                                 (currentUser.assignedAmbulance && trip.ambulanceUnit === currentUser.assignedAmbulance);
+                
+                const matchesSearch = !search || 
+                    trip.ambulanceUnit?.toLowerCase().includes(search) ||
+                    trip.driver?.toLowerCase().includes(search) ||
+                    trip.destination?.toLowerCase().includes(search);
+                
+                const matchesFilter = currentFilter === 'all' || trip.tripType === currentFilter;
+                
+                return isVisible && matchesSearch && matchesFilter;
+            });
+            
+            filteredTrips.reverse().forEach((trip, idx) => {
+                const row = document.createElement('tr');
+                const statusClass = trip.status === 'active' ? 'status-active' : 
+                                  trip.status === 'completed' ? 'status-completed' : 'status-cancelled';
+                
+                const currentStatus = trip.currentStatus || 'started';
+                const statusLabels = {
+                    'started': 'Started',
+                    'dispatched': 'Dispatched',
+                    'enroute': 'En Route',
+                    'onscene': 'On Scene',
+                    'athospital': 'At Hospital',
+                    'available': 'Available'
+                };
+                
+                row.innerHTML = `
+                    <td>${trip.tripDate}</td>
+                    <td>${trip.ambulanceUnit}</td>
+                    <td>${trip.tripType}</td>
+                    <td>${trip.driver}</td>
+                    <td>${trip.destination}</td>
+                    <td>${trip.totalKilometers || 'N/A'}</td>
+                    <td><span class="trip-status ${statusClass}">${trip.status}</span></td>
+                    <td>${trip.status === 'active' ? statusLabels[currentStatus] : 'Completed'}</td>
+                    <td>
+                        <button onclick="viewTrip(${trips.length - 1 - idx})" style="font-size: 0.8rem;">View</button>
+                        <button onclick="deleteTrip(${trips.length - 1 - idx})" style="background:#b71c1c;font-size: 0.8rem;">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Filter trips
+        window.filterTrips = function(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            updateTripTable();
+        };
+
+        // Trip actions
+        window.viewTrip = async function(idx) {
+            const trip = getTrips()[idx];
+            let details = `Trip Details:\nDate: ${trip.tripDate}\nAmbulance: ${trip.ambulanceUnit}\nType: ${trip.tripType}\nDriver: ${trip.driver}\nAttendant: ${trip.attendant || 'N/A'}\nStart Time: ${trip.startTime}\nEnd Time: ${trip.endTime || 'N/A'}\nDestination: ${trip.destination}\nStarting Odometer: ${trip.startMileage}\nEnding Odometer: ${trip.endMileage || 'N/A'}\nTotal Kilometers: ${trip.totalKilometers || 'N/A'}\nFuel Used: ${trip.fuelUsed || 'N/A'} litres\nStatus: ${trip.status}\nNotes: ${trip.tripNotes || 'None'}`;
+            await showAlert(details, 'Trip Details');
+        };
+
+        window.deleteTrip = async function(idx) {
+            if (await showConfirm('Delete this trip record?', 'Delete Trip')) {
+                const trips = getTrips();
+                trips.splice(idx, 1);
+                saveTrips(trips);
+                updateTripDisplay();
+            }
+        };
+
+        // Maintenance log
+        document.getElementById('addMaintenanceBtn').addEventListener('click', async function() {
+            const ambulance = document.getElementById('maintenanceAmbulance').value;
+            const type = document.getElementById('maintenanceType').value;
+            const cost = document.getElementById('maintenanceCost').value;
+            const notes = document.getElementById('maintenanceNotes').value;
+            
+            if (!ambulance || !type) {
+                await showAlert('Please select ambulance and maintenance type', 'Missing Information');
+                return;
+            }
+            
+            const maintenance = getMaintenance();
+            maintenance.push({
+                id: Date.now(),
+                ambulance: ambulance,
+                type: type,
+                cost: parseFloat(cost) || 0,
+                notes: notes,
+                date: new Date().toISOString().split('T')[0],
+                timestamp: new Date().toISOString()
+            });
+            
+            saveMaintenance(maintenance);
+            updateMaintenanceLog();
+            
+            // Clear form
+            document.getElementById('maintenanceCost').value = '';
+            document.getElementById('maintenanceNotes').value = '';
+            
+            await showAlert('Maintenance record added', 'Record Added');
+        });
+
+        function updateMaintenanceLog() {
+            const maintenance = getMaintenance();
+            const container = document.getElementById('maintenanceLog');
+            
+            if (maintenance.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #666; font-style: italic; padding: 1rem;">No maintenance records</div>';
+                return;
+            }
+            
+            container.innerHTML = maintenance.slice(-20).reverse().map(record => `
+                <div class="maintenance-item">
+                    <div>
+                        <strong>${record.ambulance}</strong> - ${record.type}
+                        <br><small>${record.date} | R${record.cost.toFixed(2)}</small>
+                        ${record.notes ? `<br><small>${record.notes}</small>` : ''}
+                    </div>
+                    <button onclick="deleteMaintenance(${record.id})" style="background:#f44336;padding:0.25rem 0.5rem;font-size:0.7rem;">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        window.deleteMaintenance = async function(id) {
+            if (await showConfirm('Delete this maintenance record?', 'Delete Record')) {
+                const maintenance = getMaintenance();
+                const filtered = maintenance.filter(record => record.id !== id);
+                saveMaintenance(filtered);
+                updateMaintenanceLog();
+            }
+        };
+
+        // Search functionality
+        document.getElementById('tripSearch').addEventListener('input', updateTripTable);
+
+        // Clear end trip form when starting new trip
+        function clearEndTripForm() {
+            document.getElementById('endMileage').value = '';
+            document.getElementById('tripNotes').value = '';
+        }
+
+        // Authentication check
+        if (localStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'index.html';
+        }
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', async function() {
+            if (await showConfirm('Are you sure you want to logout?', 'Logout')) {
+                localStorage.removeItem('isLoggedIn');
+                window.location.href = 'index.html';
+            }
+        });
+
+        // Apply dark mode
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+        }
+
+        // Initialize page
+        populateAmbulanceSelects();
+        updateTripDisplay();
+        updateMaintenanceLog();
+        setupRoleBasedNavigation();
+        
+        // Check for active trips on page load
+        const trips = getTrips();
+        const activeTrip = trips.find(trip => trip.status === 'active');
+        if (activeTrip) {
+            currentTrip = activeTrip;
+            currentDispatchStatus = activeTrip.currentStatus || 'started';
+            
+            if (currentDispatchStatus === 'available') {
+                showDispatchStatusSection();
+                showEndTripSection();
+                // Restore button states
+                restoreDispatchButtonStates();
+            } else {
+                showDispatchStatusSection();
+                restoreDispatchButtonStates();
+            }
+            
+            // Restore timestamps
+            restoreTimestamps();
+        }
+        
+        // Restore dispatch button states
+        function restoreDispatchButtonStates() {
+            if (!currentTrip || !currentTrip.timestamps) return;
+            
+            const buttons = [
+                { id: 'statusDispatched', status: 'dispatched' },
+                { id: 'statusEnroute', status: 'enroute' },
+                { id: 'statusOnScene', status: 'onscene' },
+                { id: 'statusAtHospital', status: 'athospital' },
+                { id: 'statusAvailable', status: 'available' }
+            ];
+            
+            let foundCurrent = false;
+            buttons.forEach(button => {
+                const btn = document.getElementById(button.id);
+                if (currentTrip.timestamps[button.status]) {
+                    // This status has been completed
+                    btn.disabled = true;
+                    btn.style.opacity = '0.5';
+                } else if (!foundCurrent) {
+                    // This is the next available status
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                    foundCurrent = true;
+                } else {
+                    // Future statuses
+                    btn.disabled = true;
+                    btn.style.opacity = '0.5';
+                }
+            });
+        }
+        
+        // Restore timestamps
+        function restoreTimestamps() {
+            if (!currentTrip) return;
+            
+            updateTimestampLog();
+            
+            if (currentTrip.timestamps) {
+                const statusLabels = {
+                    'dispatched': 'Dispatched',
+                    'enroute': 'En Route',
+                    'onscene': 'On Scene',
+                    'athospital': 'At Hospital',
+                    'available': 'Available'
+                };
+                
+                Object.keys(currentTrip.timestamps).forEach(status => {
+                    if (statusLabels[status]) {
+                        addTimestampEntry(statusLabels[status], currentTrip.timestamps[status]);
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html> 

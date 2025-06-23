@@ -1,0 +1,269 @@
+/* Ambulance PRF System - Modern CSS */
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #f4f8fb;
+  margin: 0;
+  color: #222;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+header {
+  background: #1976d2;
+  color: #fff;
+  padding: 1rem 2rem;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+nav {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  background: #1565c0;
+  padding: 0.5rem 0;
+  flex-wrap: wrap;
+}
+
+nav a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+nav a:hover, nav a.active {
+  background: #0d47a1;
+}
+
+main {
+  max-width: 800px;
+  margin: 2rem auto;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  padding: 2rem;
+}
+
+h1, h2, h3 {
+  color: #1976d2;
+}
+
+button, input[type="submit"] {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  padding: 0.7rem 1.5rem;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 1rem;
+  margin-right: 0.5rem;
+  transition: background 0.2s, transform 0.1s;
+}
+
+button:hover, input[type="submit"]:hover {
+  background: #1565c0;
+  transform: translateY(-1px);
+}
+
+button:active, input[type="submit"]:active {
+  transform: translateY(0);
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 0.6rem;
+  margin: 0.5rem 0 1rem 0;
+  border: 1px solid #b0bec5;
+  border-radius: 4px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+}
+
+label {
+  font-weight: 500;
+  margin-bottom: 0.2rem;
+  display: block;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+table th, table td {
+  border: 1px solid #e3eaf1;
+  padding: 0.7rem;
+  text-align: left;
+}
+
+table th {
+  background: #e3eaf1;
+  font-weight: 600;
+}
+
+table tr:hover {
+  background: #f8f9fa;
+}
+
+/* Dark mode styles */
+.dark-mode {
+  background: #1a1a1a;
+  color: #e0e0e0;
+}
+
+.dark-mode header {
+  background: #0d47a1;
+}
+
+.dark-mode nav {
+  background: #1565c0;
+}
+
+.dark-mode main {
+  background: #2d2d2d;
+  color: #e0e0e0;
+}
+
+.dark-mode h1, .dark-mode h2, .dark-mode h3 {
+  color: #64b5f6;
+}
+
+.dark-mode input, .dark-mode select, .dark-mode textarea {
+  background: #3d3d3d;
+  border-color: #555;
+  color: #e0e0e0;
+}
+
+.dark-mode input:focus, .dark-mode select:focus, .dark-mode textarea:focus {
+  border-color: #64b5f6;
+  box-shadow: 0 0 0 2px rgba(100, 181, 246, 0.2);
+}
+
+.dark-mode table th {
+  background: #3d3d3d;
+  color: #e0e0e0;
+}
+
+.dark-mode table th, .dark-mode table td {
+  border-color: #555;
+}
+
+.dark-mode table tr:hover {
+  background: #3a3a3a;
+}
+
+/* Additional button styles */
+.btn-secondary {
+  background: #6c757d !important;
+}
+
+.btn-secondary:hover {
+  background: #5a6268 !important;
+}
+
+.btn-danger {
+  background: #b71c1c !important;
+}
+
+.btn-danger:hover {
+  background: #8e0000 !important;
+}
+
+.btn-success {
+  background: #2e7d32 !important;
+}
+
+.btn-success:hover {
+  background: #1b5e20 !important;
+}
+
+/* Responsive design */
+@media (max-width: 800px) {
+  main {
+    padding: 1rem;
+    margin: 1rem;
+    max-width: none;
+  }
+  nav {
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem;
+  }
+  nav a {
+    text-align: center;
+  }
+  table {
+    font-size: 0.9rem;
+  }
+  table th, table td {
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 500px) {
+  header {
+    padding: 1rem;
+  }
+  header h1 {
+    font-size: 1.5rem;
+  }
+  button, input[type="submit"] {
+    width: 100%;
+    margin: 0.5rem 0;
+  }
+}
+
+/* Utility classes */
+.text-center {
+  text-align: center;
+}
+
+.mb-1 {
+  margin-bottom: 1rem;
+}
+
+.mt-1 {
+  margin-top: 1rem;
+}
+
+.hidden {
+  display: none;
+}
+
+.success-msg {
+  color: #2e7d32;
+  background: #e8f5e8;
+  padding: 0.5rem;
+  border-radius: 4px;
+  margin: 1rem 0;
+}
+
+.error-msg {
+  color: #b71c1c;
+  background: #ffeaea;
+  padding: 0.5rem;
+  border-radius: 4px;
+  margin: 1rem 0;
+}
+
+.dark-mode .success-msg {
+  background: #1b5e20;
+  color: #c8e6c9;
+}
+
+.dark-mode .error-msg {
+  background: #8e0000;
+  color: #ffcdd2;
+} 

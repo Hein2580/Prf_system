@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambulance Checklist</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Ambulance Checklist</h1>
+        <p>Complete your daily/shift ambulance checks</p>
+    </header>
+      <nav>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="ambulance-directory.html">Ambulance Directory</a>
+    <a href="checklist.html" class="active">Checklist</a>
+                            <a href="prf-form.html">PRF Form</a>
+        <a href="trip-log.html">Trip Log</a>
+        <a href="settings.html">Settings</a>
+    <button id="logoutBtn" style="background:#b71c1c;margin-left:auto;">Logout</button>
+  </nav>
+    <main>
+        <div id="noAmbulancesMsg" style="display:none;color:red;margin-bottom:1rem;">
+            No ambulances found. Please <a href="ambulance-directory.html">add ambulances</a> first.
+        </div>
+        <h2>Select Ambulance</h2>
+        <select id="ambulanceSelect"></select>
+        <h2>Checklist</h2>
+        
+
+        <div id="checklistSummary" style="background: #f0f8ff; border: 2px solid #2196f3; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; display: none;">
+            <h3 style="margin: 0 0 0.5rem 0; color: #2196f3;">📋 Checklist Summary</h3>
+            <div style="display: flex; gap: 2rem; align-items: center;">
+                <div>
+                    <strong>Complete:</strong> <span id="completeCount" style="color: #4caf50; font-weight: bold;">0</span>
+                </div>
+                <div>
+                    <strong>Incomplete:</strong> <span id="incompleteCount" style="color: #f44336; font-weight: bold;">0</span>
+                </div>
+                <div>
+                    <strong>Progress:</strong> <span id="progressPercent" style="color: #2196f3; font-weight: bold;">0%</span>
+                </div>
+                <div style="flex: 1; background: #e0e0e0; height: 20px; border-radius: 10px; overflow: hidden;">
+                    <div id="progressBar" style="height: 100%; background: linear-gradient(90deg, #4caf50, #8bc34a); width: 0%; transition: width 0.3s ease;"></div>
+                </div>
+        </div>
+    </div>
+
+        <form id="checklistForm">
+            <div style="margin-bottom:1rem; display: flex; gap: 1rem; align-items: center;">
+                <input type="text" id="newChecklistItem" placeholder="Add new checklist item..." style="flex: 1;">
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                    <label for="newItemQuantity" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Required</label>
+                    <input type="number" id="newItemQuantity" value="1" min="1" max="999" style="width: 70px; text-align: center;">
+                </div>
+                <button type="button" id="addChecklistItem" style="padding: 0.5rem 1rem;">Add Item</button>
+            </div>
+            <table>
+                <thead>
+                    <tr><th>Item</th><th>Required</th><th>Current</th><th>Status</th><th>Remove</th></tr>
+                </thead>
+                <tbody id="checklistBody">
+        
+                </tbody>
+            </table>
+            <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1rem;">
+                <button type="submit" style="background: #4caf50; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 4px; cursor: pointer;">💾 Save Checklist</button>
+                <button type="button" id="fillAllRequired" style="background: #2196f3; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 4px; cursor: pointer;">✅ Fill All Required</button>
+                <button type="button" id="clearAll" style="background: #ff9800; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 4px; cursor: pointer;">🗑️ Clear All</button>
+            </div>
+        </form>
+        <div id="checklistSavedMsg" style="display:none;color:green;">Checklist saved!</div>
+        <div id="itemAddedMsg" style="display:none;color:green;">Item added!</div>
+    </main>
+    <script src="tools.js"></script>
+    <script>
+        // Checklist items are now dynamic per ambulance
+        function getAmbulances() {
+            return JSON.parse(localStorage.getItem('ambulances') || '[]');
+        }
+        function getChecklist(callSign) {
+            return JSON.parse(localStorage.getItem('checklist_' + callSign) || '[]');
+        }
+        function saveChecklist(callSign, data) {
+            localStorage.setItem('checklist_' + callSign, JSON.stringify(data));
+        }
+        function getChecklistItems(callSign) {
+            return JSON.parse(localStorage.getItem('checklist_items_' + callSign) || 'null');
+        }
+        function saveChecklistItems(callSign, items) {
+            localStorage.setItem('checklist_items_' + callSign, JSON.stringify(items));
+        }
+        // Default items for new ambulances with required quantities
+        const defaultItems = [
+            { name: 'Oxygen Cylinder', required: 2, current: 0 },
+            { name: 'Defibrillator', required: 1, current: 0 },
+            { name: 'First Aid Kit', required: 1, current: 0 },
+            { name: 'Stretcher', required: 1, current: 0 },
+            { name: 'Suction Unit', required: 1, current: 0 },
+            { name: 'Radio', required: 1, current: 0 },
+            { name: 'Gloves (pairs)', required: 20, current: 0 },
+            { name: 'Blankets', required: 4, current: 0 },
+            { name: 'Saline Bags', required: 6, current: 0 },
+            { name: 'Sphygmomanometer', required: 1, current: 0 },
+            { name: 'Bandages', required: 10, current: 0 },
+            { name: 'Syringes', required: 15, current: 0 }
+        ];
+        let currentAmbulance = '';
+        function populateAmbulanceSelect() {
+            const ambulances = getAmbulances();
+            const select = document.getElementById('ambulanceSelect');
+            const noAmbulancesMsg = document.getElementById('noAmbulancesMsg');
+            select.innerHTML = '';
+            
+            if (ambulances.length === 0) {
+                // Add some default ambulances for demo
+                const defaultAmbulances = [
+                    { callSign: 'A1', status: 'Available' },
+                    { callSign: 'A2', status: 'Available' },
+                    { callSign: 'A3', status: 'Available' }
+                ];
+                localStorage.setItem('ambulances', JSON.stringify(defaultAmbulances));
+                ambulances.push(...defaultAmbulances);
+            }
+            
+            ambulances.forEach(amb => {
+                const opt = document.createElement('option');
+                opt.value = amb.callSign;
+                opt.textContent = amb.callSign;
+                select.appendChild(opt);
+            });
+            
+            if(select.options.length) {
+                select.value = select.options[0].value;
+                loadChecklist(select.value);
+                noAmbulancesMsg.style.display = 'none';
+            } else {
+                noAmbulancesMsg.style.display = 'block';
+            }
+        }
+        function loadChecklist(callSign) {
+            currentAmbulance = callSign;
+            let items = getChecklistItems(callSign);
+            if(!items) {
+                items = [...defaultItems];
+                saveChecklistItems(callSign, items);
+            }
+            let checked = getChecklist(callSign);
+            // Ensure checked array matches items length
+            if (!Array.isArray(checked)) checked = [];
+            while (checked.length < items.length) {
+                checked.push(false);
+            }
+            if (checked.length > items.length) {
+                checked = checked.slice(0, items.length);
+            }
+            saveChecklist(callSign, checked);
+            renderChecklist(items, checked);
+        }
+        function renderChecklist(items, checked) {
+            const tbody = document.getElementById('checklistBody');
+            tbody.innerHTML = '';
+            items.forEach((item, idx) => {
+                const isChecked = checked[idx] ? 'checked' : '';
+                const itemName = typeof item === 'string' ? item : item.name;
+                const required = typeof item === 'string' ? 1 : item.required;
+                const current = typeof item === 'string' ? (checked[idx] ? 1 : 0) : item.current;
+                
+                // Status based on quantity
+                const isComplete = current >= required;
+                const statusClass = isComplete ? 'status-complete' : 'status-incomplete';
+                const statusText = isComplete ? '✅' : '❌';
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td style="font-weight: bold;">${itemName}</td>
+                    <td style="text-align: center; font-weight: bold; color: #2196f3;">${required}</td>
+                    <td style="text-align: center;">
+                        <div style="display: inline-flex; align-items: center; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; background: white;">
+                            <button type="button" onclick="adjustQuantity(${idx}, -1)" 
+                                    style="background: #f8f9fa; color: #495057; border: none; width: 32px; height: 32px; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center;"
+                                    onmouseover="this.style.background='#e9ecef'; this.style.color='#212529';"
+                                    onmouseout="this.style.background='#f8f9fa'; this.style.color='#495057';">−</button>
+                            <input type="number" 
+                                   value="${current}" 
+                                   min="0" 
+                                   max="999" 
+                                   style="width: 50px; height: 32px; text-align: center; border: none; border-left: 1px solid #ddd; border-right: 1px solid #ddd; padding: 0; font-weight: bold; font-size: 14px; outline: none;"
+                                   onchange="updateQuantity(${idx}, this.value)"
+                                   id="qty_${idx}">
+                            <button type="button" onclick="adjustQuantity(${idx}, 1)" 
+                                    style="background: #f8f9fa; color: #495057; border: none; width: 32px; height: 32px; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center;"
+                                    onmouseover="this.style.background='#e9ecef'; this.style.color='#212529';"
+                                    onmouseout="this.style.background='#f8f9fa'; this.style.color='#495057';">+</button>
+                        </div>
+                    </td>
+                    <td style="text-align: center; font-size: 1.2rem;" class="${statusClass}">${statusText}</td>
+                    <td style="text-align: center;">
+                        <button type="button" onclick="removeChecklistItem(${idx})" style="background:#b71c1c; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">Remove</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            // Update summary
+            updateChecklistSummary(items);
+        }
+        
+        function updateChecklistSummary(items) {
+            if (!items || items.length === 0) {
+                document.getElementById('checklistSummary').style.display = 'none';
+                return;
+            }
+            
+            document.getElementById('checklistSummary').style.display = 'block';
+            
+            let completeCount = 0;
+            let totalCount = items.length;
+            
+            items.forEach(item => {
+                const required = typeof item === 'string' ? 1 : item.required;
+                const current = typeof item === 'string' ? 0 : item.current;
+                if (current >= required) {
+                    completeCount++;
+                }
+            });
+            
+            const incompleteCount = totalCount - completeCount;
+            const progressPercent = totalCount > 0 ? Math.round((completeCount / totalCount) * 100) : 0;
+            
+            document.getElementById('completeCount').textContent = completeCount;
+            document.getElementById('incompleteCount').textContent = incompleteCount;
+            document.getElementById('progressPercent').textContent = progressPercent + '%';
+            document.getElementById('progressBar').style.width = progressPercent + '%';
+            
+            // Change progress bar color based on completion
+            const progressBar = document.getElementById('progressBar');
+            if (progressPercent === 100) {
+                progressBar.style.background = 'linear-gradient(90deg, #4caf50, #66bb6a)';
+            } else if (progressPercent >= 75) {
+                progressBar.style.background = 'linear-gradient(90deg, #8bc34a, #aed581)';
+            } else if (progressPercent >= 50) {
+                progressBar.style.background = 'linear-gradient(90deg, #ffc107, #ffeb3b)';
+            } else {
+                progressBar.style.background = 'linear-gradient(90deg, #ff9800, #ffb74d)';
+            }
+        }
+        function showMessage(msgId) {
+            document.getElementById(msgId).style.display = 'block';
+            setTimeout(() => {
+                document.getElementById(msgId).style.display = 'none';
+            }, 1500);
+        }
+
+        // Quantity management functions
+        window.adjustQuantity = function(idx, change) {
+            if (!currentAmbulance) return;
+            
+            let items = getChecklistItems(currentAmbulance) || [...defaultItems];
+            if (typeof items[idx] === 'string') {
+                // Convert old format to new format
+                items[idx] = { name: items[idx], required: 1, current: 0 };
+            }
+            
+            const newCurrent = Math.max(0, items[idx].current + change);
+            items[idx].current = newCurrent;
+            
+            saveChecklistItems(currentAmbulance, items);
+            
+            // Update the input field
+            const input = document.getElementById(`qty_${idx}`);
+            if (input) input.value = newCurrent;
+            
+            // Re-render to update status
+            let checked = getChecklist(currentAmbulance) || [];
+            renderChecklist(items, checked);
+        };
+
+        window.updateQuantity = function(idx, value) {
+            if (!currentAmbulance) return;
+            
+            let items = getChecklistItems(currentAmbulance) || [...defaultItems];
+            if (typeof items[idx] === 'string') {
+                // Convert old format to new format
+                items[idx] = { name: items[idx], required: 1, current: 0 };
+            }
+            
+            const newCurrent = Math.max(0, parseInt(value) || 0);
+            items[idx].current = newCurrent;
+            
+            saveChecklistItems(currentAmbulance, items);
+            
+            // Re-render to update status
+            let checked = getChecklist(currentAmbulance) || [];
+            renderChecklist(items, checked);
+        };
+        document.getElementById('ambulanceSelect').onchange = function() {
+            loadChecklist(this.value);
+        };
+        document.getElementById('addChecklistItem').onclick = async function() {
+            const input = document.getElementById('newChecklistItem');
+            const quantityInput = document.getElementById('newItemQuantity');
+            const itemName = input.value.trim();
+            const required = parseInt(quantityInput.value) || 1;
+            
+            if(!itemName) {
+                await showAlert('Please enter an item name', 'Missing Information');
+                return;
+            }
+            
+            if(!currentAmbulance) {
+                await showAlert('Please select an ambulance first', 'No Ambulance Selected');
+                return;
+            }
+            
+            let items = getChecklistItems(currentAmbulance);
+            if(!items) {
+                items = [...defaultItems];
+            }
+            
+            // Add new item with quantity structure
+            items.push({
+                name: itemName,
+                required: required,
+                current: 0
+            });
+            saveChecklistItems(currentAmbulance, items);
+            
+            let checked = getChecklist(currentAmbulance);
+            if (!Array.isArray(checked)) checked = [];
+            checked.push(false);
+            saveChecklist(currentAmbulance, checked);
+            
+            renderChecklist(items, checked);
+            input.value = '';
+            quantityInput.value = '1';
+            showMessage('itemAddedMsg');
+        };
+        window.removeChecklistItem = async function(idx) {
+            if(currentAmbulance && await showConfirm('Remove this item?', 'Remove Item')) {
+                let items = getChecklistItems(currentAmbulance) || [...defaultItems];
+                let checked = getChecklist(currentAmbulance) || [];
+                items.splice(idx,1);
+                checked.splice(idx,1);
+                saveChecklistItems(currentAmbulance, items);
+                saveChecklist(currentAmbulance, checked);
+                renderChecklist(items, checked);
+            }
+        };
+        document.getElementById('checklistForm').onsubmit = function(e) {
+            e.preventDefault();
+            if(!currentAmbulance) return;
+            let items = getChecklistItems(currentAmbulance) || [...defaultItems];
+            const data = items.map((_, idx) => {
+                const checkbox = this.querySelector(`input[name="item${idx}"]`);
+                return checkbox ? checkbox.checked : false;
+            });
+            saveChecklist(currentAmbulance, data);
+            showMessage('checklistSavedMsg');
+        };
+        // Allow Enter key to add item
+        document.getElementById('newChecklistItem').onkeypress = function(e) {
+            if(e.key === 'Enter') {
+                document.getElementById('addChecklistItem').click();
+            }
+        };
+
+        // Bulk operations
+        document.getElementById('fillAllRequired').onclick = async function() {
+            if (!currentAmbulance) return;
+            if (!await showConfirm('Set all items to their required quantities?', 'Fill All Required')) return;
+            
+            let items = getChecklistItems(currentAmbulance) || [...defaultItems];
+            items.forEach(item => {
+                if (typeof item === 'object') {
+                    item.current = item.required;
+                }
+            });
+            
+            saveChecklistItems(currentAmbulance, items);
+            let checked = getChecklist(currentAmbulance) || [];
+            renderChecklist(items, checked);
+            showMessage('checklistSavedMsg');
+        };
+
+        document.getElementById('clearAll').onclick = async function() {
+            if (!currentAmbulance) return;
+            if (!await showConfirm('Clear all current quantities to 0?', 'Clear All Quantities')) return;
+            
+            let items = getChecklistItems(currentAmbulance) || [...defaultItems];
+            items.forEach(item => {
+                if (typeof item === 'object') {
+                    item.current = 0;
+                }
+            });
+            
+            saveChecklistItems(currentAmbulance, items);
+            let checked = getChecklist(currentAmbulance) || [];
+            renderChecklist(items, checked);
+            showMessage('checklistSavedMsg');
+        };
+            // Check if user is logged in
+            if (localStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'index.html';
+        }
+    
+    // Logout functionality
+    document.getElementById('logoutBtn').addEventListener('click', async function() {
+                  if (await showConfirm('Are you sure you want to logout?', 'Logout')) {
+                localStorage.removeItem('isLoggedIn');
+                window.location.href = 'index.html';
+            }
+    });
+    
+    populateAmbulanceSelect();
+    setupRoleBasedNavigation();
+    
+    // Apply dark mode if enabled
+    if (localStorage.getItem('darkMode') === 'true') {
+      document.body.classList.add('dark-mode');
+    }
+    </script>
+</body>
+</html>
