@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Patient Report Form (PRF)</title>
     <link rel="stylesheet" href="style.css">
     <style>
@@ -576,7 +576,8 @@
         
         <h2>PRF History</h2>
         <input type="text" id="prfSearch" placeholder="Search by patient, date, or ambulance..." style="width:100%;margin-bottom:1rem;">
-        <table id="prfTable">
+        <div class="table-container">
+            <table id="prfTable">
             <thead>
                 <tr>
                     <th>Patient</th>
@@ -590,6 +591,7 @@
 
             </tbody>
         </table>
+        </div>
     </main>
 
     <script src="tools.js"></script>
