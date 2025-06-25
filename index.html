@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Login - Ambulance PRF System</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1976d2">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="EMS PRF">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiByeD0iMjQiIGZpbGw9IiMxOTc2ZDIiLz4KPHN2ZyB4PSI0OCIgeT0iNDgiIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiPgo8cGF0aCBkPSJNOSA5aDZtLTYgM2g2bS0yIDVhMTMgMTMgMCAwIDEtMyA4IDIgMiAwIDAgMS00IDBoLTE2YTIgMiAwIDAgMS00IDBoLTMgMTMgMTMgMCAwIDEtMy04em05LTEuNWwtMy0zLjVNNS41IDEySDkiLz4KPHN2ZyB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCAxMCAxMCIgZmlsbD0id2hpdGUiPgo8cGF0aCBkPSJNMSA1aDhtNS0xdjgiLz4KPC9zdmc+Cjwvc3ZnPg==">
 </head>
 <body>
     <header>
@@ -17,6 +23,25 @@
     </nav>
     
     <main style="max-width: 400px; margin: 2rem auto;">
+        <!-- Install App Banner -->
+        <div id="installBanner" class="install-banner" style="display: none;">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                <div style="font-size: 2rem;">📱</div>
+                <div style="flex: 1;">
+                    <h3 style="margin: 0; color: #1976d2; font-size: 1.1rem;">Install EMS PRF App</h3>
+                    <p style="margin: 0.25rem 0 0 0; font-size: 0.9rem; color: #666;">Get quick access and work offline</p>
+                </div>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <button id="installBtn" class="btn-primary" style="font-size: 0.9rem; padding: 0.5rem 1rem;">
+                    📥 Install App
+                </button>
+                <button id="dismissBtn" style="background: #f5f5f5; color: #666; border: none; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.9rem; cursor: pointer;">
+                    Maybe Later
+                </button>
+            </div>
+        </div>
+
         <div class="form-section">
             <h2 style="text-align: center; margin-bottom: 2rem;">Login</h2>
             
@@ -35,6 +60,15 @@
                     <button type="submit" class="btn-primary" style="width: 100%;">Login</button>
                 </div>
             </form>
+            
+            <!-- Permanent Download Button - Outside Form -->
+            <div style="text-align: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e0e0e0;">
+                                    <button type="button" id="downloadAppBtn" class="download-btn" onclick="handleDownloadClick()">
+                        <span style="font-size: 1.2rem; margin-right: 0.5rem;">🖥️</span>
+                        Add to Desktop
+                    </button>
+                    <p style="margin: 0.5rem 0 0 0; font-size: 0.8rem; color: #666;">Creates a desktop/home screen icon for quick access</p>
+            </div>
             
             <div style="margin-top: 2rem; padding: 1rem; background: #f0f8ff; border-radius: 6px; font-size: 0.9rem;">
                 <h4 style="margin: 0 0 0.5rem 0;">Demo Accounts:</h4>
@@ -56,8 +90,45 @@
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            
+            // Get values and check for spaces/trailing spaces
+            const originalUsername = usernameInput.value;
+            const originalPassword = passwordInput.value;
+            const username = originalUsername.trim();
+            const password = originalPassword.trim();
+            
+            // Validate for spaces and trailing spaces
+            if (originalUsername !== username) {
+                await showAlert('Username cannot have leading or trailing spaces');
+                usernameInput.focus();
+                return;
+            }
+            
+            if (originalPassword !== password) {
+                await showAlert('Password cannot have leading or trailing spaces');
+                passwordInput.focus();
+                return;
+            }
+            
+            if (username.includes(' ')) {
+                await showAlert('Username cannot contain spaces');
+                usernameInput.focus();
+                return;
+            }
+            
+            if (password.includes(' ')) {
+                await showAlert('Password cannot contain spaces');
+                passwordInput.focus();
+                return;
+            }
+            
+            // Check if fields are empty after trimming
+            if (!username || !password) {
+                await showAlert('Please enter both username and password');
+                return;
+            }
             
             const users = [
                 { username: 'admin', password: 'admin123', role: 'admin', name: 'Administrator' },
@@ -157,6 +228,184 @@
         
         if (localStorage.getItem('isLoggedIn') === 'true') {
             window.location.href = 'dashboard.html';
+        }
+
+        // PWA Install functionality
+        let deferredPrompt;
+        const installBanner = document.getElementById('installBanner');
+        const installBtn = document.getElementById('installBtn');
+        const dismissBtn = document.getElementById('dismissBtn');
+
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('sw.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(function(err) {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+
+        // Listen for beforeinstallprompt event
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent the mini-infobar from appearing on mobile
+            e.preventDefault();
+            // Stash the event so it can be triggered later
+            deferredPrompt = e;
+            // Show the install banner
+            if (localStorage.getItem('installPromptDismissed') !== 'true') {
+                installBanner.style.display = 'block';
+            }
+        });
+
+        // Handle install button click
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt !== null) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    deferredPrompt = null;
+                    installBanner.style.display = 'none';
+                }
+            }
+        });
+
+        // Handle dismiss button click
+        dismissBtn.addEventListener('click', () => {
+            installBanner.style.display = 'none';
+            localStorage.setItem('installPromptDismissed', 'true');
+        });
+
+        // Listen for app installed event
+        window.addEventListener('appinstalled', () => {
+            installBanner.style.display = 'none';
+            console.log('PWA was installed');
+        });
+
+        // Show manual install instructions for iOS
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isInStandaloneMode = ('standalone' in window.navigator) && (window.navigator.standalone);
+        
+        if (isIOS && !isInStandaloneMode) {
+            // Show iOS install instructions
+            setTimeout(() => {
+                if (localStorage.getItem('iosInstallPromptDismissed') !== 'true') {
+                    const iosInstallBanner = document.createElement('div');
+                    iosInstallBanner.className = 'install-banner';
+                    iosInstallBanner.style.cssText = `
+                        background: #e3f2fd; 
+                        border: 1px solid #1976d2; 
+                        border-radius: 8px; 
+                        padding: 1rem; 
+                        margin-bottom: 1rem;
+                        position: relative;
+                    `;
+                    iosInstallBanner.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                            <div style="font-size: 2rem;">🍎</div>
+                            <div style="flex: 1;">
+                                <h3 style="margin: 0; color: #1976d2; font-size: 1.1rem;">Install on iOS</h3>
+                                <p style="margin: 0.25rem 0 0 0; font-size: 0.9rem; color: #1976d2;">Tap Share button <span style="font-size: 1.2rem;">⬆️</span> then "Add to Home Screen"</p>
+                            </div>
+                            <button onclick="this.parentElement.parentElement.style.display='none'; localStorage.setItem('iosInstallPromptDismissed', 'true');" 
+                                    style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666;">×</button>
+                        </div>
+                    `;
+                                         document.querySelector('main').insertBefore(iosInstallBanner, document.querySelector('.form-section'));
+                 }
+             }, 2000);
+         }
+
+        // Handle permanent download button click - Creates Desktop Icon
+        async function handleDownloadClick() {
+            const downloadBtn = document.getElementById('downloadAppBtn');
+            const originalText = downloadBtn.innerHTML;
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const isInStandaloneMode = ('standalone' in window.navigator) && (window.navigator.standalone);
+            
+            // Show processing state
+            downloadBtn.innerHTML = '<span style="font-size: 1.2rem; margin-right: 0.5rem;">⏳</span>Adding to Desktop...';
+            downloadBtn.disabled = true;
+            
+            try {
+                if (deferredPrompt && deferredPrompt !== null) {
+                    // Android/Chrome - use native install prompt (creates desktop/home screen icon)
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                        await showAlert('✅ EMS PRF icon added to your desktop/home screen! You can now access the app directly from there.');
+                        deferredPrompt = null;
+                    } else {
+                        await showAlert('❌ Desktop icon not added. You can try again anytime.');
+                    }
+                } else if (isIOS && !isInStandaloneMode) {
+                    // iOS - show manual instructions for creating home screen icon
+                    await showAlert(`📱 To add EMS PRF icon to your iPhone/iPad home screen:
+
+1. Tap the Share button ⬆️ at the bottom of Safari
+2. Scroll down and tap "Add to Home Screen"  
+3. Tap "Add" to confirm
+
+✅ The EMS PRF icon will appear on your home screen for quick access!`);
+                } else if (isInStandaloneMode) {
+                    // Already installed
+                    await showAlert('✅ EMS PRF is already installed! Check your desktop/home screen for the app icon.');
+                } else {
+                    // Desktop browsers - provide specific instructions
+                    if (navigator.userAgent.includes('Chrome') || navigator.userAgent.includes('Edge')) {
+                        await showAlert(`🖥️ To add EMS PRF to your desktop:
+
+1. Look for the install icon (⊕) in your browser's address bar
+2. Click it and select "Install"  
+3. The app will be added to your desktop and Start menu
+
+📌 Alternative: Press Ctrl+Shift+A (Windows) or Cmd+Shift+A (Mac)`);
+                    } else if (navigator.userAgent.includes('Firefox')) {
+                        // Create a desktop shortcut file for Firefox
+                        createDesktopShortcut();
+                        await showAlert('🖥️ Desktop shortcut file downloaded! Save it to your desktop to quickly access EMS PRF.');
+                    } else {
+                        await showAlert(`🖥️ To add EMS PRF to your desktop:
+
+• Chrome/Edge: Look for install icon in address bar
+• Firefox: A shortcut file will be downloaded  
+• Safari: Use "Add to Dock" option
+
+💡 For best experience, use Chrome or Edge browser.`);
+                    }
+                }
+            } catch (error) {
+                console.error('Desktop icon creation failed:', error);
+                await showAlert('❌ Failed to add desktop icon. Please try using your browser\'s install option.');
+            } finally {
+                // Restore button state
+                downloadBtn.innerHTML = originalText;
+                downloadBtn.disabled = false;
+            }
+        }
+
+        // Create desktop shortcut file for browsers that don't support PWA install
+        function createDesktopShortcut() {
+            const shortcutContent = `[InternetShortcut]
+URL=${window.location.href}
+IconFile=${window.location.origin}/favicon.ico`;
+
+            const blob = new Blob([shortcutContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            
+            const downloadLink = document.createElement('a');
+            downloadLink.href = url;
+            downloadLink.download = 'EMS PRF System.url';
+            downloadLink.style.display = 'none';
+            
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+            
+            URL.revokeObjectURL(url);
         }
     </script>
 </body>
