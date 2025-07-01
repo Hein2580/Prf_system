@@ -1,21 +1,21 @@
 const CACHE_NAME = 'ambulance-prf-v1';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/landing.html',
-  '/dashboard.html',
-  '/prf-form.html',
-  '/checklist.html',
-  '/trip-log.html',
-  '/ambulance-directory.html',
-  '/settings.html',
-  '/style.css',
-  '/tools.js',
-  '/manifest.json',
-  '/icon-192.svg',
-  '/icon-512.svg',
-  '/apple-touch-icon.svg',
-  '/favicon.svg'
+  './',
+  './index.html',
+  './landing.html',
+  './dashboard.html',
+  './prf-form.html',
+  './checklist.html',
+  './trip-log.html',
+  './ambulance-directory.html',
+  './settings.html',
+  './style.css',
+  './tools.js',
+  './manifest.json',
+  './icon-192.svg',
+  './icon-512.svg',
+  './apple-touch-icon.svg',
+  './favicon.svg'
 ];
 
 // Install event - cache resources
