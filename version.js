@@ -75,36 +75,6 @@ function addVersionToFooter() {
 }
 
 /**
- * Add version badge to navigation
- */
-function addVersionToNav() {
-  // Add to slide menu if it exists (mobile)
-  const slideMenu = document.querySelector('.slide-menu');
-  if (slideMenu) {
-    const versionSection = document.createElement('div');
-    versionSection.className = 'menu-section version-section';
-    versionSection.innerHTML = `
-      <div class="menu-version">
-        <span class="menu-icon">ℹ️</span>
-        <div class="menu-label">
-          <div class="version-primary">v${VERSION_STRING}</div>
-          <div class="version-secondary">Build ${APP_VERSION.build}</div>
-        </div>
-      </div>
-    `;
-    slideMenu.appendChild(versionSection);
-  }
-  
-  // Add to desktop nav if exists
-  const nav = document.querySelector('nav');
-  if (nav && window.innerWidth >= 768) {
-    const versionBadge = createVersionBadge(true);
-    versionBadge.style.marginLeft = 'auto';
-    nav.appendChild(versionBadge);
-  }
-}
-
-/**
  * Initialize version display
  */
 function initVersionDisplay() {
@@ -178,50 +148,11 @@ function initVersionDisplay() {
       font-size: 0.75rem;
     }
     
-    /* Menu Version Styles */
-    .version-section {
-      border-top: 1px solid #e0e0e0;
-      border-bottom: none;
-    }
-    
-    .menu-version {
-      display: flex;
-      align-items: center;
-      padding: 0.875rem 1.5rem;
-      color: #666;
-      cursor: help;
-    }
-    
-    .menu-version .menu-icon {
-      margin-right: 1rem;
-      font-size: 1.25rem;
-      width: 24px;
-      text-align: center;
-    }
-    
-    .version-primary {
-      font-weight: 600;
-      color: #1976d2;
-    }
-    
-    .version-secondary {
-      font-size: 0.75rem;
-      color: #9ca3af;
-    }
-    
     /* Dark Mode Support */
     .dark-mode .app-footer {
       background: #1f2937;
       border-color: #374151;
       color: #9ca3af;
-    }
-    
-    .dark-mode .menu-version {
-      color: #e5e7eb;
-    }
-    
-    .dark-mode .version-secondary {
-      color: #6b7280;
     }
     
     /* Mobile adjustments */
@@ -242,8 +173,7 @@ function initVersionDisplay() {
   `;
   document.head.appendChild(style);
   
-  // Add version displays
-  addVersionToNav();
+  // Only add version to footer
   addVersionToFooter();
   
   // Add to console for developers
@@ -270,5 +200,17 @@ window.APP_VERSION = VERSION_STRING;
 
 // Remove persistent global install banner
 // (delete or comment out setupInstallBanner IIFE)
+
+// Set dark mode as default unless user has a preference
+(function setDefaultDarkMode() {
+  if (localStorage.getItem('darkMode') === null) {
+    localStorage.setItem('darkMode', 'true');
+    document.body.classList.add('dark-mode');
+  } else if (localStorage.getItem('darkMode') === 'true') {
+    document.body.classList.add('dark-mode');
+  } else {
+    document.body.classList.remove('dark-mode');
+  }
+})();
 
 // ... existing code ... 

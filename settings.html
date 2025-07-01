@@ -25,7 +25,8 @@
     <div style="margin-bottom:2rem;">
       <h3>Export Data</h3>
       <p>Export all your data as a JSON file for backup:</p>
-      <button id="exportData">Export All Data</button>
+      <button id="exportData" class="btn-primary" style="background:#1976d2;color:white;">Export All Data</button>
+      <button id="downloadData" class="btn-secondary" style="background:#4b5563;color:white;margin-left:1rem;">Download Data</button>
     </div>
     
     <div style="margin-bottom:2rem;">
@@ -54,6 +55,12 @@
       <p><strong>Ambulances:</strong> <span id="ambulanceCount">0</span></p>
       <p><strong>PRFs:</strong> <span id="prfCount">0</span></p>
       <p><strong>Storage Used:</strong> <span id="storageUsed">0 KB</span></p>
+    </div>
+    
+    <div style="margin-bottom:2rem;">
+      <h3>Install App</h3>
+      <button id="installAppBtn" style="background:#1976d2;color:white;">Install App</button>
+      <div id="installStatus" style="margin-top:0.5rem;font-size:0.9rem;color:#666;"></div>
     </div>
     
     <div id="settingsMsg" style="display:none;margin-top:1rem;"></div>
@@ -172,10 +179,61 @@
             }
         });
     
+    // Permanent download button handler
+    document.getElementById('downloadData').onclick = function() {
+      try {
+        const data = exportAllData();
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'ambulance-prf-backup-' + new Date().toISOString().split('T')[0] + '.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showMessage('Data downloaded successfully!');
+      } catch (e) {
+        showMessage('Download failed: ' + e.message, true);
+      }
+    };
+    
     // Initialize
     updateSystemInfo();
     loadDarkMode();
     setupRoleBasedNavigation();
+    
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+    });
+    document.getElementById('installAppBtn').onclick = async function() {
+        // Check if already installed
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+            document.getElementById('installStatus').textContent = 'App is already installed on this device.';
+            document.getElementById('installStatus').style.color = 'green';
+            return;
+        }
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                document.getElementById('installStatus').textContent = 'App installed successfully!';
+                document.getElementById('installStatus').style.color = 'green';
+            } else {
+                document.getElementById('installStatus').textContent = 'Installation cancelled. You can try again.';
+                document.getElementById('installStatus').style.color = '#f57c00';
+            }
+        } else {
+            document.getElementById('installStatus').textContent = 'Installation is not available on this device/browser.';
+            document.getElementById('installStatus').style.color = '#f57c00';
+        }
+    };
+    window.addEventListener('appinstalled', () => {
+        document.getElementById('installStatus').textContent = 'App is already installed on this device.';
+        document.getElementById('installStatus').style.color = 'green';
+    });
   </script>
 </body>
 </html> 

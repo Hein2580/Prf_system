@@ -232,16 +232,13 @@ function updateUserInfo() {
  * Apply dark mode if saved
  */
 function applyDarkMode() {
-  if (localStorage.getItem('darkMode') === 'true') {
+  if (localStorage.getItem('darkMode') === null) {
+    localStorage.setItem('darkMode', 'true');
     document.body.classList.add('dark-mode');
-    
-    const darkModeToggle = document.getElementById('darkModeToggle');
-    if (darkModeToggle) {
-      const icon = darkModeToggle.querySelector('.menu-icon');
-      const label = darkModeToggle.querySelector('.menu-label');
-      if (icon) icon.textContent = '☀️';
-      if (label) label.textContent = 'Light Mode';
-    }
+  } else if (localStorage.getItem('darkMode') === 'true') {
+    document.body.classList.add('dark-mode');
+  } else {
+    document.body.classList.remove('dark-mode');
   }
 }
 

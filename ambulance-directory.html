@@ -101,10 +101,10 @@
     <a href="dashboard.html">Dashboard</a>
     <a href="ambulance-directory.html" class="active">Ambulance Directory</a>
     <a href="checklist.html">Checklist</a>
-                            <a href="prf-form.html">PRF Form</a>
-        <a href="trip-log.html">Trip Log</a>
-        <a href="settings.html">Settings</a>
-    <button id="logoutBtn" style="background:#b71c1c;margin-left:auto;">Logout</button>
+    <a href="prf-form.html">PRF Form</a>
+    <a href="trip-log.html">Trip Log</a>
+    <a href="settings.html">Settings</a>
+    <button id="logoutBtnNav" style="background:#b71c1c;margin-left:auto;">Logout</button>
   </nav>
     <main>
         <h2>Ambulances</h2>
@@ -284,12 +284,15 @@
         }
         
         // Logout functionality
-        document.getElementById('logoutBtn').addEventListener('click', async function() {
-            if (await showConfirm('Are you sure you want to logout?', 'Logout')) {
-                localStorage.removeItem('isLoggedIn');
-                window.location.href = 'index.html';
-            }
-        });
+        const logoutBtnNav = document.getElementById('logoutBtnNav');
+        if (logoutBtnNav) {
+            logoutBtnNav.addEventListener('click', async function() {
+                if (await showConfirm('Are you sure you want to logout?', 'Logout')) {
+                    localStorage.removeItem('isLoggedIn');
+                    window.location.href = 'index.html';
+                }
+            });
+        }
         
         loadAmbulances();
         

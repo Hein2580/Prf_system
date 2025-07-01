@@ -170,6 +170,7 @@
     <a href="prf-form.html">PRF Form</a>
     <a href="trip-log.html">Trip Log</a>
     <a href="settings.html">Settings</a>
+    <button id="logoutBtnNav" style="background:#b71c1c;margin-left:auto;">Logout</button>
   </nav>
 
 
@@ -183,7 +184,6 @@
           <p id="loginTime">Logged in at 09:30 AM</p>
         </div>
       </div>
-      <button class="logout-btn" id="logoutBtn">Logout</button>
     </div>
 
     <div class="stats-grid">
@@ -333,24 +333,31 @@
       });
       document.getElementById('checklistCount').textContent = completedChecklists;
       
-      // Calculate online time
+      // Calculate online time with ticking seconds
       const userForTime = JSON.parse(localStorage.getItem('currentUser') || 'null');
       if (userForTime && userForTime.loginTime) {
         try {
           const loginTime = new Date(userForTime.loginTime);
           const now = new Date();
-          const onlineMinutes = Math.floor((now - loginTime) / (1000 * 60));
-          const hours = Math.floor(onlineMinutes / 60);
-          const minutes = onlineMinutes % 60;
-          document.getElementById('onlineTime').textContent = 
-            hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+          const onlineSeconds = Math.floor((now - loginTime) / 1000);
+          const hours = Math.floor(onlineSeconds / 3600);
+          const minutes = Math.floor((onlineSeconds % 3600) / 60);
+          const seconds = onlineSeconds % 60;
+          let timeStr = '';
+          if (hours > 0) timeStr += `${hours}h `;
+          if (minutes > 0 || hours > 0) timeStr += `${minutes}m `;
+          timeStr += `${seconds}s`;
+          document.getElementById('onlineTime').textContent = timeStr.trim();
         } catch (e) {
-          document.getElementById('onlineTime').textContent = '0m';
+          document.getElementById('onlineTime').textContent = '0s';
         }
       } else {
-        document.getElementById('onlineTime').textContent = '0m';
+        document.getElementById('onlineTime').textContent = '0s';
       }
     }
+
+    // Update stats every second for ticking online time
+    setInterval(loadStats, 1000);
 
     // Load recent activity
     function loadRecentActivity() {
@@ -398,20 +405,6 @@
         `).join('');
       }
     }
-
-    // Logout functionality
-    document.getElementById('logoutBtn').addEventListener('click', async function() {
-      if (await showConfirm('Are you sure you want to logout?', 'Logout')) {
-        localStorage.removeItem('isLoggedIn');
-        if (localStorage.getItem('rememberLogin') !== 'true') {
-          localStorage.removeItem('currentUser');
-        }
-        window.location.href = 'index.html';
-      }
-    });
-
-    // Update stats every 30 seconds
-    setInterval(loadStats, 30000);
 
     // Hide admin-only features for non-admin users
     function setupRoleBasedUI() {
@@ -468,6 +461,20 @@
         }
       }
     }, 100);
+
+    // Add logout button handler for nav bar
+    const logoutBtnNav = document.getElementById('logoutBtnNav');
+    if (logoutBtnNav) {
+      logoutBtnNav.addEventListener('click', async function() {
+        if (await showConfirm('Are you sure you want to logout?', 'Logout')) {
+          localStorage.removeItem('isLoggedIn');
+          if (localStorage.getItem('rememberLogin') !== 'true') {
+            localStorage.removeItem('currentUser');
+          }
+          window.location.href = 'index.html';
+        }
+      });
+    }
   </script>
 </body>
 </html> 

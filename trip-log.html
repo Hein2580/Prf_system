@@ -244,10 +244,10 @@
         <a href="dashboard.html">Dashboard</a>
         <a href="ambulance-directory.html">Ambulance Directory</a>
         <a href="checklist.html">Checklist</a>
-                        <a href="prf-form.html">PRF Form</a>
+        <a href="prf-form.html">PRF Form</a>
         <a href="trip-log.html" class="active">Trip Log</a>
         <a href="settings.html">Settings</a>
-        <button id="logoutBtn" style="background:#b71c1c;margin-left:auto;">Logout</button>
+        <button id="logoutBtnNav" style="background:#b71c1c;margin-left:auto;">Logout</button>
     </nav>
     <main class="trip-container">
 
@@ -263,8 +263,8 @@
                     <div class="summary-value" id="completedTrips">0</div>
                 </div>
                 <div class="summary-card">
-                                    <h4>Total Kilometers</h4>
-                <div class="summary-value" id="totalKilometers">0</div>
+                    <h4>Total Kilometers</h4>
+                    <div class="summary-value" id="totalKilometers">0</div>
                 </div>
                 <div class="summary-card">
                     <h4>Fuel Used</h4>
@@ -666,12 +666,12 @@
                 trips[tripIndex].status = 'completed';
                 trips[tripIndex].endTimestamp = now.toISOString();
                 
-                            // Calculate total kilometers if both start and end mileage are provided
-            if (endMileage && trips[tripIndex].startMileage) {
-                trips[tripIndex].totalKilometers = (parseFloat(endMileage) - parseFloat(trips[tripIndex].startMileage)).toFixed(1);
-            } else {
-                trips[tripIndex].totalKilometers = 'N/A';
-            }
+                // Calculate total kilometers if both start and end mileage are provided
+                if (endMileage && trips[tripIndex].startMileage) {
+                    trips[tripIndex].totalKilometers = (parseFloat(endMileage) - parseFloat(trips[tripIndex].startMileage)).toFixed(1);
+                } else {
+                    trips[tripIndex].totalKilometers = 'N/A';
+                }
                 
                 // Add completion timestamp
                 addTimestampEntry('Trip Completed', endTime);
@@ -1076,12 +1076,15 @@
         }
 
         // Logout functionality
-        document.getElementById('logoutBtn').addEventListener('click', async function() {
-            if (await showConfirm('Are you sure you want to logout?', 'Logout')) {
-                localStorage.removeItem('isLoggedIn');
-                window.location.href = 'index.html';
-            }
-        });
+        const logoutBtnNav = document.getElementById('logoutBtnNav');
+        if (logoutBtnNav) {
+            logoutBtnNav.addEventListener('click', async function() {
+                if (await showConfirm('Are you sure you want to logout?', 'Logout')) {
+                    localStorage.removeItem('isLoggedIn');
+                    window.location.href = 'index.html';
+                }
+            });
+        }
 
         // Apply dark mode
         if (localStorage.getItem('darkMode') === 'true') {
