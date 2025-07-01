@@ -10,7 +10,10 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="EMS PRF">
-    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiByeD0iMjQiIGZpbGw9IiMxOTc2ZDIiLz4KPHN2ZyB4PSI0OCIgeT0iNDgiIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiPgo8cGF0aCBkPSJNOSA5aDZtLTYgM2g2bS0yIDVhMTMgMTMgMCAwIDEtMyA4IDIgMiAwIDAgMS00IDBoLTE2YTIgMiAwIDAgMS00IDBoLTMgMTMgMTMgMCAwIDEtMy04em05LTEuNWwtMy0zLjVNNS41IDEySDkiLz4KPHN2ZyB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCAxMCAxMCIgZmlsbD0id2hpdGUiPgo8cGF0aCBkPSJNMSA1aDhtNS0xdjgiLz4KPC9zdmc+Cjwvc3ZnPg==">
+    <link rel="apple-touch-icon" href="apple-touch-icon.svg">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="icon-192.svg" type="image/svg+xml" sizes="192x192">
+    <link rel="shortcut icon" href="favicon.svg" type="image/svg+xml">
 </head>
 <body>
     <header>
@@ -23,7 +26,7 @@
     </nav>
     
     <main style="max-width: 400px; margin: 2rem auto;">
-        <!-- Install App Banner -->
+        <!-- Smart Install Banner -->
         <div id="installBanner" class="install-banner" style="display: none;">
             <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
                 <div style="font-size: 2rem;">📱</div>
@@ -60,15 +63,7 @@
                     <button type="submit" class="btn-primary" style="width: 100%;">Login</button>
                 </div>
             </form>
-            
-            <!-- Permanent Download Button - Outside Form -->
-            <div style="text-align: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e0e0e0;">
-                                    <button type="button" id="downloadAppBtn" class="download-btn" onclick="handleDownloadClick()">
-                        <span style="font-size: 1.2rem; margin-right: 0.5rem;">🖥️</span>
-                        Add to Desktop
-                    </button>
-                    <p style="margin: 0.5rem 0 0 0; font-size: 0.8rem; color: #666;">Creates a desktop/home screen icon for quick access</p>
-            </div>
+
             
             <div style="margin-top: 2rem; padding: 1rem; background: #f0f8ff; border-radius: 6px; font-size: 0.9rem;">
                 <h4 style="margin: 0 0 0.5rem 0;">Demo Accounts:</h4>
@@ -256,20 +251,77 @@
             // Stash the event so it can be triggered later
             deferredPrompt = e;
             // Show the install banner
-            if (localStorage.getItem('installPromptDismissed') !== 'true') {
-                installBanner.style.display = 'block';
-            }
+            showInstallBanner();
         });
+
+        // Show install banner intelligently
+        function showInstallBanner() {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const isInStandaloneMode = ('standalone' in window.navigator) && (window.navigator.standalone);
+            const isDismissed = localStorage.getItem('installPromptDismissed') === 'true';
+            
+            // Don't show if user dismissed it or already installed
+            if (isDismissed || isInStandaloneMode) {
+                return;
+            }
+            
+            // Show for PWA-capable browsers or iOS
+            if (deferredPrompt || isIOS) {
+                installBanner.style.display = 'block';
+                
+                // Update button text based on platform
+                if (isIOS) {
+                    installBtn.innerHTML = '🍎 Add to Home Screen';
+                    installBanner.querySelector('p').textContent = 'Tap Share ⬆️ then "Add to Home Screen"';
+                }
+            }
+        }
 
         // Handle install button click
         installBtn.addEventListener('click', async () => {
-            if (deferredPrompt !== null) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') {
-                    deferredPrompt = null;
-                    installBanner.style.display = 'none';
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const originalText = installBtn.innerHTML;
+            
+            try {
+                installBtn.innerHTML = '⏳ Installing...';
+                installBtn.disabled = true;
+                
+                if (deferredPrompt && deferredPrompt !== null) {
+                    // Android/Chrome - use native install prompt
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                        await showAlert('✅ EMS PRF app installed successfully! Check your desktop/home screen.');
+                        deferredPrompt = null;
+                        installBanner.style.display = 'none';
+                    } else {
+                        await showAlert('❌ Installation cancelled. You can install anytime using this button.');
+                    }
+                } else if (isIOS) {
+                    // iOS - show detailed instructions
+                    await showAlert(`📱 To install EMS PRF on iPhone/iPad:
+
+1. Tap the Share button ⬆️ (bottom of Safari)
+2. Scroll down and tap "Add to Home Screen"
+3. Tap "Add" to confirm
+
+✅ The app icon will appear on your home screen!`);
+                } else {
+                    // Desktop browsers - provide instructions
+                    await showAlert(`🖥️ To install EMS PRF:
+
+• Chrome/Edge: Look for install icon (⊕) in address bar
+• Firefox: Use "Install this site as an app" option
+• Or bookmark this page for quick access
+
+💡 For best experience, use Chrome or Edge.`);
                 }
+            } catch (error) {
+                console.error('Install error:', error);
+                await showAlert('❌ Installation failed. Please try your browser\'s install option.');
+            } finally {
+                installBtn.innerHTML = originalText;
+                installBtn.disabled = false;
             }
         });
 
@@ -285,128 +337,12 @@
             console.log('PWA was installed');
         });
 
-        // Show manual install instructions for iOS
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        const isInStandaloneMode = ('standalone' in window.navigator) && (window.navigator.standalone);
-        
-        if (isIOS && !isInStandaloneMode) {
-            // Show iOS install instructions
-            setTimeout(() => {
-                if (localStorage.getItem('iosInstallPromptDismissed') !== 'true') {
-                    const iosInstallBanner = document.createElement('div');
-                    iosInstallBanner.className = 'install-banner';
-                    iosInstallBanner.style.cssText = `
-                        background: #e3f2fd; 
-                        border: 1px solid #1976d2; 
-                        border-radius: 8px; 
-                        padding: 1rem; 
-                        margin-bottom: 1rem;
-                        position: relative;
-                    `;
-                    iosInstallBanner.innerHTML = `
-                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-                            <div style="font-size: 2rem;">🍎</div>
-                            <div style="flex: 1;">
-                                <h3 style="margin: 0; color: #1976d2; font-size: 1.1rem;">Install on iOS</h3>
-                                <p style="margin: 0.25rem 0 0 0; font-size: 0.9rem; color: #1976d2;">Tap Share button <span style="font-size: 1.2rem;">⬆️</span> then "Add to Home Screen"</p>
-                            </div>
-                            <button onclick="this.parentElement.parentElement.style.display='none'; localStorage.setItem('iosInstallPromptDismissed', 'true');" 
-                                    style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666;">×</button>
-                        </div>
-                    `;
-                                         document.querySelector('main').insertBefore(iosInstallBanner, document.querySelector('.form-section'));
-                 }
-             }, 2000);
-         }
+        // Show install banner after page load for non-PWA browsers
+        setTimeout(() => {
+            showInstallBanner();
+        }, 2000);
 
-        // Handle permanent download button click - Creates Desktop Icon
-        async function handleDownloadClick() {
-            const downloadBtn = document.getElementById('downloadAppBtn');
-            const originalText = downloadBtn.innerHTML;
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-            const isInStandaloneMode = ('standalone' in window.navigator) && (window.navigator.standalone);
-            
-            // Show processing state
-            downloadBtn.innerHTML = '<span style="font-size: 1.2rem; margin-right: 0.5rem;">⏳</span>Adding to Desktop...';
-            downloadBtn.disabled = true;
-            
-            try {
-                if (deferredPrompt && deferredPrompt !== null) {
-                    // Android/Chrome - use native install prompt (creates desktop/home screen icon)
-                    deferredPrompt.prompt();
-                    const { outcome } = await deferredPrompt.userChoice;
-                    if (outcome === 'accepted') {
-                        await showAlert('✅ EMS PRF icon added to your desktop/home screen! You can now access the app directly from there.');
-                        deferredPrompt = null;
-                    } else {
-                        await showAlert('❌ Desktop icon not added. You can try again anytime.');
-                    }
-                } else if (isIOS && !isInStandaloneMode) {
-                    // iOS - show manual instructions for creating home screen icon
-                    await showAlert(`📱 To add EMS PRF icon to your iPhone/iPad home screen:
 
-1. Tap the Share button ⬆️ at the bottom of Safari
-2. Scroll down and tap "Add to Home Screen"  
-3. Tap "Add" to confirm
-
-✅ The EMS PRF icon will appear on your home screen for quick access!`);
-                } else if (isInStandaloneMode) {
-                    // Already installed
-                    await showAlert('✅ EMS PRF is already installed! Check your desktop/home screen for the app icon.');
-                } else {
-                    // Desktop browsers - provide specific instructions
-                    if (navigator.userAgent.includes('Chrome') || navigator.userAgent.includes('Edge')) {
-                        await showAlert(`🖥️ To add EMS PRF to your desktop:
-
-1. Look for the install icon (⊕) in your browser's address bar
-2. Click it and select "Install"  
-3. The app will be added to your desktop and Start menu
-
-📌 Alternative: Press Ctrl+Shift+A (Windows) or Cmd+Shift+A (Mac)`);
-                    } else if (navigator.userAgent.includes('Firefox')) {
-                        // Create a desktop shortcut file for Firefox
-                        createDesktopShortcut();
-                        await showAlert('🖥️ Desktop shortcut file downloaded! Save it to your desktop to quickly access EMS PRF.');
-                    } else {
-                        await showAlert(`🖥️ To add EMS PRF to your desktop:
-
-• Chrome/Edge: Look for install icon in address bar
-• Firefox: A shortcut file will be downloaded  
-• Safari: Use "Add to Dock" option
-
-💡 For best experience, use Chrome or Edge browser.`);
-                    }
-                }
-            } catch (error) {
-                console.error('Desktop icon creation failed:', error);
-                await showAlert('❌ Failed to add desktop icon. Please try using your browser\'s install option.');
-            } finally {
-                // Restore button state
-                downloadBtn.innerHTML = originalText;
-                downloadBtn.disabled = false;
-            }
-        }
-
-        // Create desktop shortcut file for browsers that don't support PWA install
-        function createDesktopShortcut() {
-            const shortcutContent = `[InternetShortcut]
-URL=${window.location.href}
-IconFile=${window.location.origin}/favicon.ico`;
-
-            const blob = new Blob([shortcutContent], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            
-            const downloadLink = document.createElement('a');
-            downloadLink.href = url;
-            downloadLink.download = 'EMS PRF System.url';
-            downloadLink.style.display = 'none';
-            
-            document.body.appendChild(downloadLink);
-            downloadLink.click();
-            document.body.removeChild(downloadLink);
-            
-            URL.revokeObjectURL(url);
-        }
     </script>
 </body>
 </html> 

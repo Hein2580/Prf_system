@@ -11,7 +11,11 @@ const urlsToCache = [
   '/settings.html',
   '/style.css',
   '/tools.js',
-  '/manifest.json'
+  '/manifest.json',
+  '/icon-192.svg',
+  '/icon-512.svg',
+  '/apple-touch-icon.svg',
+  '/favicon.svg'
 ];
 
 // Install event - cache resources

@@ -1,0 +1,61 @@
+<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2196F3;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1976D2;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="ambulanceGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F5F5F5;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="2" dy="4" stdDeviation="3" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- Rounded background -->
+  <rect width="192" height="192" rx="32" fill="url(#bgGradient)"/>
+  
+  <!-- Ambulance body -->
+  <g filter="url(#shadow)">
+    <!-- Main ambulance body -->
+    <rect x="32" y="64" width="128" height="56" rx="8" fill="url(#ambulanceGradient)" stroke="#E0E0E0" stroke-width="1"/>
+    
+    <!-- Ambulance front -->
+    <rect x="144" y="72" width="16" height="40" rx="4" fill="url(#ambulanceGradient)" stroke="#E0E0E0" stroke-width="1"/>
+    
+    <!-- Wheels -->
+    <circle cx="56" cy="136" r="12" fill="#424242"/>
+    <circle cx="56" cy="136" r="8" fill="#616161"/>
+    <circle cx="136" cy="136" r="12" fill="#424242"/>
+    <circle cx="136" cy="136" r="8" fill="#616161"/>
+    
+    <!-- Windows -->
+    <rect x="40" y="72" width="20" height="16" rx="2" fill="#64B5F6" opacity="0.8"/>
+    <rect x="68" y="72" width="24" height="16" rx="2" fill="#64B5F6" opacity="0.8"/>
+    <rect x="100" y="72" width="24" height="16" rx="2" fill="#64B5F6" opacity="0.8"/>
+    <rect x="132" y="72" width="20" height="16" rx="2" fill="#64B5F6" opacity="0.8"/>
+    
+    <!-- Emergency lights -->
+    <rect x="36" y="60" width="8" height="4" rx="2" fill="#FF5722"/>
+    <rect x="48" y="60" width="8" height="4" rx="2" fill="#2196F3"/>
+    <rect x="136" y="60" width="8" height="4" rx="2" fill="#FF5722"/>
+    <rect x="148" y="60" width="8" height="4" rx="2" fill="#2196F3"/>
+  </g>
+  
+  <!-- Red cross symbol -->
+  <g transform="translate(96,92)">
+    <!-- Cross background circle -->
+    <circle cx="0" cy="0" r="20" fill="#F44336"/>
+    <circle cx="0" cy="0" r="18" fill="#FFFFFF"/>
+    
+    <!-- Cross lines -->
+    <rect x="-12" y="-3" width="24" height="6" rx="3" fill="#F44336"/>
+    <rect x="-3" y="-12" width="6" height="24" rx="3" fill="#F44336"/>
+  </g>
+  
+  <!-- Subtle highlights -->
+  <rect x="32" y="64" width="128" height="4" rx="2" fill="#FFFFFF" opacity="0.3"/>
+  <rect x="32" y="64" width="4" height="56" rx="2" fill="#FFFFFF" opacity="0.2"/>
+</svg> 

@@ -1,0 +1,77 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2196F3;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1976D2;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="ambulanceGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F5F5F5;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="4" dy="8" stdDeviation="6" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- Rounded background -->
+  <rect width="512" height="512" rx="80" fill="url(#bgGradient)"/>
+  
+  <!-- Ambulance body -->
+  <g filter="url(#shadow)">
+    <!-- Main ambulance body -->
+    <rect x="80" y="170" width="352" height="150" rx="20" fill="url(#ambulanceGradient)" stroke="#E0E0E0" stroke-width="2"/>
+    
+    <!-- Ambulance front -->
+    <rect x="392" y="190" width="40" height="110" rx="10" fill="url(#ambulanceGradient)" stroke="#E0E0E0" stroke-width="2"/>
+    
+    <!-- Wheels -->
+    <circle cx="150" cy="360" r="32" fill="#424242"/>
+    <circle cx="150" cy="360" r="24" fill="#616161"/>
+    <circle cx="150" cy="360" r="16" fill="#9E9E9E"/>
+    <circle cx="362" cy="360" r="32" fill="#424242"/>
+    <circle cx="362" cy="360" r="24" fill="#616161"/>
+    <circle cx="362" cy="360" r="16" fill="#9E9E9E"/>
+    
+    <!-- Windows -->
+    <rect x="100" y="190" width="50" height="40" rx="5" fill="#64B5F6" opacity="0.8"/>
+    <rect x="160" y="190" width="60" height="40" rx="5" fill="#64B5F6" opacity="0.8"/>
+    <rect x="230" y="190" width="60" height="40" rx="5" fill="#64B5F6" opacity="0.8"/>
+    <rect x="300" y="190" width="60" height="40" rx="5" fill="#64B5F6" opacity="0.8"/>
+    <rect x="370" y="190" width="50" height="40" rx="5" fill="#64B5F6" opacity="0.8"/>
+    
+    <!-- Emergency lights -->
+    <rect x="90" y="150" width="20" height="10" rx="5" fill="#FF5722"/>
+    <rect x="120" y="150" width="20" height="10" rx="5" fill="#2196F3"/>
+    <rect x="360" y="150" width="20" height="10" rx="5" fill="#FF5722"/>
+    <rect x="390" y="150" width="20" height="10" rx="5" fill="#2196F3"/>
+    
+    <!-- Side details -->
+    <rect x="100" y="250" width="280" height="50" rx="8" fill="#FFFFFF" opacity="0.9"/>
+    <rect x="110" y="260" width="40" height="8" rx="4" fill="#1976D2"/>
+    <rect x="110" y="275" width="60" height="6" rx="3" fill="#666"/>
+    <rect x="110" y="285" width="50" height="6" rx="3" fill="#666"/>
+  </g>
+  
+  <!-- Red cross symbol -->
+  <g transform="translate(256,245)">
+    <!-- Cross background circle -->
+    <circle cx="0" cy="0" r="50" fill="#F44336"/>
+    <circle cx="0" cy="0" r="45" fill="#FFFFFF"/>
+    
+    <!-- Cross lines with slight 3D effect -->
+    <rect x="-30" y="-8" width="60" height="16" rx="8" fill="#F44336"/>
+    <rect x="-8" y="-30" width="16" height="60" rx="8" fill="#F44336"/>
+    
+    <!-- Highlight on cross -->
+    <rect x="-30" y="-8" width="60" height="4" rx="2" fill="#FFFFFF" opacity="0.3"/>
+    <rect x="-8" y="-30" width="4" height="60" rx="2" fill="#FFFFFF" opacity="0.3"/>
+  </g>
+  
+  <!-- Subtle highlights -->
+  <rect x="80" y="170" width="352" height="10" rx="5" fill="#FFFFFF" opacity="0.3"/>
+  <rect x="80" y="170" width="10" height="150" rx="5" fill="#FFFFFF" opacity="0.2"/>
+  
+  <!-- Additional details -->
+  <text x="256" y="380" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="#FFFFFF" opacity="0.8">EMS</text>
+</svg> 
