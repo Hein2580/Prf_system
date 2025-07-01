@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ambulance-prf-v1';
+const CACHE_NAME = 'ambulance-prf-v2';
 const urlsToCache = [
   './',
   './index.html',
@@ -9,8 +9,11 @@ const urlsToCache = [
   './trip-log.html',
   './ambulance-directory.html',
   './settings.html',
-  './style.css',
-  './tools.js',
+  './style.css?v=2',
+  './tools.js?v=2',
+  './navigation.js?v=2',
+  './version.js?v=2',
+  './dev-cache-clear.js',
   './manifest.json',
   './icon-192.svg',
   './icon-512.svg',

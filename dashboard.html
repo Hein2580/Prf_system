@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Dashboard - Ambulance PRF System</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=2">
   <style>
     .dashboard-header {
       display: flex;
@@ -162,14 +162,17 @@
     <h1>Dashboard</h1>
     <p>Ambulance PRF System Control Center</p>
   </header>
+  <!-- Desktop Navigation (hidden on mobile) -->
   <nav>
     <a href="dashboard.html" class="active">Dashboard</a>
     <a href="ambulance-directory.html">Ambulance Directory</a>
     <a href="checklist.html">Checklist</a>
-                            <a href="prf-form.html">PRF Form</a>
-        <a href="trip-log.html">Trip Log</a>
-        <a href="settings.html">Settings</a>
+    <a href="prf-form.html">PRF Form</a>
+    <a href="trip-log.html">Trip Log</a>
+    <a href="settings.html">Settings</a>
   </nav>
+
+
   <main>
     <div class="dashboard-header">
       <div class="user-info">
@@ -236,7 +239,10 @@
     </div>
   </main>
 
-  <script src="tools.js"></script>
+  <script src="tools.js?v=2"></script>
+  <script src="navigation.js?v=2"></script>
+  <script src="version.js?v=2"></script>
+  <script src="dev-cache-clear.js"></script>
   <script>
     // Check if user is logged in
             if (localStorage.getItem('isLoggedIn') !== 'true') {
@@ -441,11 +447,27 @@
       }
     }
     
+    // Apply dark mode if enabled
+    if (localStorage.getItem('darkMode') === 'true') {
+      document.body.classList.add('dark-mode');
+    }
+
     // Initialize dashboard
     loadUserInfo();
     loadStats();
     loadRecentActivity();
     setupRoleBasedUI();
+    
+    // Add version info after version.js loads
+    setTimeout(() => {
+      if (window.getVersionInfo) {
+        const versionInfo = window.getVersionInfo();
+        const subtitle = document.querySelector('header p');
+        if (subtitle) {
+          subtitle.innerHTML = `Ambulance PRF System Control Center <small style="color: rgba(255,255,255,0.7); font-weight: 300;">• v${versionInfo.version}</small>`;
+        }
+      }
+    }, 100);
   </script>
 </body>
 </html> 

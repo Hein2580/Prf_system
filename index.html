@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Login - Ambulance PRF System</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1976d2">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -27,7 +27,7 @@
     
     <main style="max-width: 400px; margin: 2rem auto;">
         <!-- Smart Install Banner -->
-        <div id="installBanner" class="install-banner" style="display: none;">
+        <div id="installBanner" class="install-banner" style="display: none; max-width: 400px; margin: 2rem auto 0 auto; background: #f0f8ff; border: 1px solid #1976d2; border-radius: 8px; padding: 1.5rem; box-shadow: 0 2px 12px rgba(25,118,210,0.08);">
             <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
                 <div style="font-size: 2rem;">📱</div>
                 <div style="flex: 1;">
@@ -35,12 +35,9 @@
                     <p style="margin: 0.25rem 0 0 0; font-size: 0.9rem; color: #666;">Get quick access and work offline</p>
                 </div>
             </div>
-            <div style="display: flex; gap: 0.5rem;">
+            <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
                 <button id="installBtn" class="btn-primary" style="font-size: 0.9rem; padding: 0.5rem 1rem;">
                     📥 Install App
-                </button>
-                <button id="dismissBtn" style="background: #f5f5f5; color: #666; border: none; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.9rem; cursor: pointer;">
-                    Maybe Later
                 </button>
             </div>
         </div>
@@ -80,7 +77,8 @@
         </div>
     </main>
     
-    <script src="tools.js"></script>
+    <script src="tools.js?v=2"></script>
+    <script src="version.js?v=2"></script>
     <script>
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -162,52 +160,19 @@
                 return;
             }
             
-            ambulanceList.innerHTML = ambulances.map(amb => `
-                <label style="display: flex; align-items: center; padding: 1rem; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #fafafa;">
-                    <input type="radio" name="selectedAmbulance" value="${amb.callSign}" style="margin-right: 1rem; transform: scale(1.2);">
-                    <div style="flex: 1;">
-                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-                            <strong style="font-size: 1.1rem; color: #1976d2;">${amb.callSign}</strong>
-                            <span style="background: #e3f2fd; color: #1976d2; padding: 0.2rem 0.5rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">${amb.type || 'Standard'}</span>
-                        </div>
-                        <div style="font-size: 0.9rem; color: #666;">
-                            📍 ${amb.location || 'Base Station'} • 
-                            <span style="color: ${amb.status === 'Available' ? '#4caf50' : '#ff9800'};">●</span>
-                            ${amb.status}
-                        </div>
-                    </div>
-                </label>
-            `).join('');
-            
-            // Add hover effects
-            const style = document.createElement('style');
-            style.textContent = `
-                #ambulanceList label:hover {
-                    border-color: #1976d2 !important;
-                    background: #f0f8ff !important;
-                    transform: translateY(-1px);
-                    box-shadow: 0 2px 8px rgba(25, 118, 210, 0.15);
-                }
+            // Render a dropdown instead of cards
+            ambulanceList.innerHTML = `
+                <label for="ambulanceDropdown" style="font-weight: 500; color: #1976d2;">Ambulance:</label>
+                <select id="ambulanceDropdown" name="selectedAmbulance" style="width: 100%; padding: 0.75rem; font-size: 1rem; border-radius: 8px; border: 2px solid #1976d2; margin-top: 0.5rem;">
+                    <option value="">Select Ambulance</option>
+                    ${ambulances.map(amb => `<option value="${amb.callSign}">${amb.callSign} (${amb.type || 'Standard'}) - ${amb.location || 'Base Station'} - ${amb.status}</option>`).join('')}
+                </select>
             `;
-            document.head.appendChild(style);
-            
-            ambulanceList.addEventListener('change', function(e) {
-                if (e.target.name === 'selectedAmbulance') {
-                    document.querySelectorAll('#ambulanceList label').forEach(label => {
-                        label.style.borderColor = '#ddd';
-                        label.style.backgroundColor = '#fafafa';
-                        label.style.boxShadow = 'none';
-                    });
-                    const selectedLabel = e.target.closest('label');
-                    selectedLabel.style.borderColor = '#1976d2';
-                    selectedLabel.style.backgroundColor = '#e3f2fd';
-                    selectedLabel.style.boxShadow = '0 2px 12px rgba(25, 118, 210, 0.25)';
-                }
-            });
         }
         
         async function proceedToDashboard() {
-            const selectedAmbulance = document.querySelector('input[name="selectedAmbulance"]:checked');
+            const dropdown = document.getElementById('ambulanceDropdown');
+            const selectedAmbulance = dropdown && dropdown.value;
             
             if (!selectedAmbulance) {
                 await showAlert('Please select an ambulance');
@@ -215,7 +180,7 @@
             }
             
             const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-            currentUser.assignedAmbulance = selectedAmbulance.value;
+            currentUser.assignedAmbulance = selectedAmbulance;
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
             
             window.location.href = 'dashboard.html';
@@ -226,122 +191,29 @@
         }
 
         // PWA Install functionality
-        let deferredPrompt;
-        const installBanner = document.getElementById('installBanner');
-        const installBtn = document.getElementById('installBtn');
-        const dismissBtn = document.getElementById('dismissBtn');
-
-        // Register service worker
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
-                navigator.serviceWorker.register('sw.js')
-                    .then(function(registration) {
-                        console.log('ServiceWorker registration successful');
-                    })
-                    .catch(function(err) {
-                        console.log('ServiceWorker registration failed: ', err);
-                    });
-            });
-        }
-
-        // Listen for beforeinstallprompt event
+        let deferredPrompt = null;
         window.addEventListener('beforeinstallprompt', (e) => {
-            // Prevent the mini-infobar from appearing on mobile
             e.preventDefault();
-            // Stash the event so it can be triggered later
             deferredPrompt = e;
-            // Show the install banner
-            showInstallBanner();
+            document.getElementById('installBanner').style.display = 'block';
         });
-
-        // Show install banner intelligently
-        function showInstallBanner() {
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-            const isInStandaloneMode = ('standalone' in window.navigator) && (window.navigator.standalone);
-            const isDismissed = localStorage.getItem('installPromptDismissed') === 'true';
-            
-            // Don't show if user dismissed it or already installed
-            if (isDismissed || isInStandaloneMode) {
-                return;
-            }
-            
-            // Show for PWA-capable browsers or iOS
-            if (deferredPrompt || isIOS) {
-                installBanner.style.display = 'block';
-                
-                // Update button text based on platform
-                if (isIOS) {
-                    installBtn.innerHTML = '🍎 Add to Home Screen';
-                    installBanner.querySelector('p').textContent = 'Tap Share ⬆️ then "Add to Home Screen"';
+        document.getElementById('installBtn').onclick = async function() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    document.getElementById('installBanner').style.display = 'none';
                 }
+                // If dismissed, keep banner visible for another try
             }
-        }
-
-        // Handle install button click
-        installBtn.addEventListener('click', async () => {
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-            const originalText = installBtn.innerHTML;
-            
-            try {
-                installBtn.innerHTML = '⏳ Installing...';
-                installBtn.disabled = true;
-                
-                if (deferredPrompt && deferredPrompt !== null) {
-                    // Android/Chrome - use native install prompt
-                    deferredPrompt.prompt();
-                    const { outcome } = await deferredPrompt.userChoice;
-                    if (outcome === 'accepted') {
-                        await showAlert('✅ EMS PRF app installed successfully! Check your desktop/home screen.');
-                        deferredPrompt = null;
-                        installBanner.style.display = 'none';
-                    } else {
-                        await showAlert('❌ Installation cancelled. You can install anytime using this button.');
-                    }
-                } else if (isIOS) {
-                    // iOS - show detailed instructions
-                    await showAlert(`📱 To install EMS PRF on iPhone/iPad:
-
-1. Tap the Share button ⬆️ (bottom of Safari)
-2. Scroll down and tap "Add to Home Screen"
-3. Tap "Add" to confirm
-
-✅ The app icon will appear on your home screen!`);
-                } else {
-                    // Desktop browsers - provide instructions
-                    await showAlert(`🖥️ To install EMS PRF:
-
-• Chrome/Edge: Look for install icon (⊕) in address bar
-• Firefox: Use "Install this site as an app" option
-• Or bookmark this page for quick access
-
-💡 For best experience, use Chrome or Edge.`);
-                }
-            } catch (error) {
-                console.error('Install error:', error);
-                await showAlert('❌ Installation failed. Please try your browser\'s install option.');
-            } finally {
-                installBtn.innerHTML = originalText;
-                installBtn.disabled = false;
-            }
-        });
-
-        // Handle dismiss button click
-        dismissBtn.addEventListener('click', () => {
-            installBanner.style.display = 'none';
-            localStorage.setItem('installPromptDismissed', 'true');
-        });
-
-        // Listen for app installed event
+        };
         window.addEventListener('appinstalled', () => {
-            installBanner.style.display = 'none';
-            console.log('PWA was installed');
+            document.getElementById('installBanner').style.display = 'none';
         });
-
-        // Show install banner after page load for non-PWA browsers
-        setTimeout(() => {
-            showInstallBanner();
-        }, 2000);
-
+        // Hide banner if already installed
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+            document.getElementById('installBanner').style.display = 'none';
+        }
 
     </script>
 </body>
