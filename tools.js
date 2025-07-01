@@ -241,41 +241,42 @@ function createModal() {
                 }
             }
             
-            /* Dark mode support */
-            [data-theme="dark"] .modal-content {
+            /* Dark mode support for both [data-theme="dark"] and .dark-mode */
+            [data-theme="dark"] .modal-content, .dark-mode .modal-content {
                 background: #1f2937;
                 color: #f9fafb;
             }
-            
-            [data-theme="dark"] .modal-header {
+            [data-theme="dark"] .modal-header, .dark-mode .modal-header {
                 border-bottom-color: #374151;
             }
-            
-            [data-theme="dark"] .modal-footer {
+            [data-theme="dark"] .modal-footer, .dark-mode .modal-footer {
                 border-top-color: #374151;
-            }
-            
-            [data-theme="dark"] .modal-header h3 {
                 color: #f9fafb;
             }
-            
-            [data-theme="dark"] .modal-close {
+            [data-theme="dark"] .modal-header h3, .dark-mode .modal-header h3 {
+                color: #f9fafb;
+            }
+            [data-theme="dark"] .modal-body, .dark-mode .modal-body {
+                color: #f9fafb;
+            }
+            [data-theme="dark"] .modal-close, .dark-mode .modal-close {
                 color: #9ca3af;
             }
-            
-            [data-theme="dark"] .modal-close:hover {
+            [data-theme="dark"] .modal-close:hover, .dark-mode .modal-close:hover {
                 background-color: #374151;
             }
-            
-            [data-theme="dark"] #modalInput {
+            [data-theme="dark"] #modalInput, .dark-mode #modalInput {
                 background-color: #374151 !important;
                 color: #f9fafb !important;
                 border-color: #4b5563 !important;
             }
-            
-            [data-theme="dark"] #modalInput:focus {
+            [data-theme="dark"] #modalInput:focus, .dark-mode #modalInput:focus {
                 border-color: #3b82f6 !important;
                 outline: none;
+            }
+            [data-theme="dark"] #modalInput::placeholder, .dark-mode #modalInput::placeholder {
+                color: #d1d5db !important;
+                opacity: 1;
             }
         `;
         document.head.appendChild(styles);
