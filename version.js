@@ -9,7 +9,7 @@ const APP_VERSION = {
   patch: 0,
   build: '20241212',
   name: 'Professional Navigation',
-  codename: 'Mobile First'
+  codename: 'AmbuTrack'
 };
 
 // Generate version strings

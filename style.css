@@ -16,7 +16,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Header - Mobile First */
+/* Header - AmbuTrack */
 header {
   background: #1976d2;
   color: #fff;
@@ -410,7 +410,7 @@ main {
   }
 }
 
-/* Main Content - Mobile First */
+/* Main Content - AmbuTrack */
 main {
   max-width: 100%;
   margin: 0;
@@ -539,7 +539,7 @@ table tr:hover {
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
-/* Grid Layouts - Mobile First */
+/* Grid Layouts - AmbuTrack */
 .form-row, .grid {
   display: grid;
   gap: 1rem;
