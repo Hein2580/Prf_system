@@ -902,8 +902,12 @@
                     'available': 'Available'
                 };
                 
+                const isDark = document.body.classList.contains('dark-mode');
+                const cardBg = isDark ? '#23293a' : 'white';
+                const cardColor = isDark ? '#f9fafb' : '#222';
+                const borderColor = isDark ? '#374151' : '#ddd';
                 return `
-                    <div style="background: white; padding: 1rem; margin: 0.5rem 0; border-radius: 8px; border-left: 4px solid ${statusColors[currentStatus]};">
+                    <div style="background: ${cardBg}; color: ${cardColor}; padding: 1rem; margin: 0.5rem 0; border-radius: 8px; border-left: 4px solid ${statusColors[currentStatus]}; border: 1px solid ${borderColor};">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div>
                                 <strong>${trip.ambulanceUnit}</strong> - ${trip.tripType}

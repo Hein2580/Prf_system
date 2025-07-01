@@ -358,7 +358,21 @@ main {
   border-color: #374151;
 }
 
-
+/* Dark mode for trip cards */
+.dark-mode .trip-card, .dark-mode .maintenance-item, .dark-mode .summary-stats, .dark-mode .stat-item {
+  background: #23293a !important;
+  color: #f9fafb !important;
+  border-color: #374151 !important;
+}
+.dark-mode .trip-card .status-badge, .dark-mode .maintenance-item button, .dark-mode .stat-item {
+  color: #fff !important;
+}
+.dark-mode .trip-card .status-badge.available {
+  background: #64748b !important;
+}
+.dark-mode .trip-card .status-badge.started {
+  background: #22c55e !important;
+}
 
 /* Tablet adjustments */
 @media (min-width: 481px) and (max-width: 767px) {
@@ -1200,4 +1214,17 @@ table tr:hover {
   background: #23293a;
   color: #f9fafb;
   border-color: #3b82f6;
+}
+
+.dark-mode .status-available {
+  background: #14532d;
+  color: #6ee7b7;
+}
+.dark-mode .status-on-call {
+  background: #78350f;
+  color: #fde68a;
+}
+.dark-mode .status-out-of-service {
+  background: #7f1d1d;
+  color: #fca5a5;
 } 
