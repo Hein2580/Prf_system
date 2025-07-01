@@ -1184,4 +1184,20 @@ table tr:hover {
   nav a:active, nav button:active {
     transform: translateY(0) !important;
   }
+}
+
+.demo-accounts, .info-box, .help-box {
+  background: #f0f8ff;
+  color: #222;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+  font-size: 0.95rem;
+  border: 1px solid #1976d2;
+  box-shadow: 0 1px 4px rgba(25,118,210,0.06);
+}
+.dark-mode .demo-accounts, .dark-mode .info-box, .dark-mode .help-box {
+  background: #23293a;
+  color: #f9fafb;
+  border-color: #3b82f6;
 } 
