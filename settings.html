@@ -57,12 +57,6 @@
       <p><strong>Storage Used:</strong> <span id="storageUsed">0 KB</span></p>
     </div>
     
-    <div style="margin-bottom:2rem;">
-      <h3>Install App</h3>
-      <button id="installAppBtn" style="background:#1976d2;color:white;">Install App</button>
-      <div id="installStatus" style="margin-top:0.5rem;font-size:0.9rem;color:#666;"></div>
-    </div>
-    
     <div id="settingsMsg" style="display:none;margin-top:1rem;"></div>
   </main>
   <script src="tools.js?v=2"></script>
@@ -202,38 +196,6 @@
     updateSystemInfo();
     loadDarkMode();
     setupRoleBasedNavigation();
-    
-    let deferredPrompt = null;
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-    });
-    document.getElementById('installAppBtn').onclick = async function() {
-        // Check if already installed
-        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
-            document.getElementById('installStatus').textContent = 'App is already installed on this device.';
-            document.getElementById('installStatus').style.color = 'green';
-            return;
-        }
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') {
-                document.getElementById('installStatus').textContent = 'App installed successfully!';
-                document.getElementById('installStatus').style.color = 'green';
-            } else {
-                document.getElementById('installStatus').textContent = 'Installation cancelled. You can try again.';
-                document.getElementById('installStatus').style.color = '#f57c00';
-            }
-        } else {
-            document.getElementById('installStatus').textContent = 'Installation is not available on this device/browser.';
-            document.getElementById('installStatus').style.color = '#f57c00';
-        }
-    };
-    window.addEventListener('appinstalled', () => {
-        document.getElementById('installStatus').textContent = 'App is already installed on this device.';
-        document.getElementById('installStatus').style.color = 'green';
-    });
   </script>
 </body>
 </html> 
