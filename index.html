@@ -4,30 +4,108 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Login - Ambulance PRF System</title>
-    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="assets/css/style.css?v=2">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1976d2">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="EMS PRF">
-    <link rel="apple-touch-icon" href="apple-touch-icon.svg">
-    <link rel="icon" href="favicon.svg" type="image/svg+xml">
-    <link rel="icon" href="icon-192.svg" type="image/svg+xml" sizes="192x192">
-    <link rel="shortcut icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="assets/images/apple-touch-icon.svg">
+    <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="assets/images/icon-192.svg" type="image/svg+xml" sizes="192x192">
+    <link rel="shortcut icon" href="assets/images/favicon.svg" type="image/svg+xml">
+    
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Alpine.js Stores and Components -->
+    <script src="assets/js/alpine-stores.js?v=1"></script>
+    <script src="assets/js/alpine-components.js?v=1"></script>
+    <script src="assets/js/tools.js?v=2"></script>
+    <script src="assets/js/version.js?v=2"></script>
+    
+    <style>
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+        .modal-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 90%;
+            max-height: calc(100vh - 2rem);
+            overflow-y: auto;
+        }
+        .modal-header {
+            padding: 1.25rem;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .modal-header h3 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        .modal-body {
+            padding: 1.25rem;
+            line-height: 1.6;
+        }
+        .modal-footer {
+            padding: 1.25rem;
+            border-top: 2px solid #e0e0e0;
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+        }
+        .modal-footer button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .dark-mode .modal-container {
+            background: #1f2937;
+            color: #f9fafb;
+        }
+        .dark-mode .modal-header {
+            border-bottom-color: #374151;
+        }
+        .dark-mode .modal-footer {
+            border-top-color: #374151;
+        }
+        .dark-mode .modal-header h3 {
+            color: #f9fafb;
+        }
+    </style>
 </head>
-<body>
+<body x-data="loginPage()" x-init="init()">
     <header>
         <h1>🚑 Ambulance PRF System</h1>
         <p>Emergency Medical Services Management</p>
     </header>
     
     <nav style="justify-content: center;">
-        <a href="landing.html">Home</a>
+        <a href="pages/landing.html">About</a>
     </nav>
     
     <main style="max-width: 400px; margin: 2rem auto;">
         <!-- Smart Install Banner -->
-        <div id="installBanner" class="install-banner" style="display: none; max-width: 400px; margin: 2rem auto 0 auto; background: #f0f8ff; border: 1px solid #1976d2; border-radius: 8px; padding: 1.5rem; box-shadow: 0 2px 12px rgba(25,118,210,0.08);">
+        <div x-show="showInstallBanner" x-transition.opacity.duration.300ms 
+             class="install-banner" 
+             style="max-width: 400px; margin: 2rem auto 0 auto; background: #f0f8ff; border: 1px solid #1976d2; border-radius: 8px; padding: 1.5rem; box-shadow: 0 2px 12px rgba(25,118,210,0.08);">
             <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
                 <div style="font-size: 2rem;">📱</div>
                 <div style="flex: 1;">
@@ -36,32 +114,50 @@
                 </div>
             </div>
             <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
-                <button id="installBtn" class="btn-primary" style="font-size: 0.9rem; padding: 0.5rem 1rem;">
+                <button @click="installApp()" class="btn-primary" style="font-size: 0.9rem; padding: 0.5rem 1rem;">
                     📥 Install App
                 </button>
             </div>
         </div>
 
-        <div class="form-section">
+        <!-- Login Form -->
+        <div x-show="!showAmbulanceSelection" x-transition.opacity.duration.300ms class="form-section">
             <h2 style="text-align: center; margin-bottom: 2rem;">Login</h2>
             
-            <form id="loginForm">
+            <form @submit.prevent="handleLogin()">
                 <div class="form-group">
                     <label for="username">Username:</label>
-                    <input type="text" id="username" name="username" required>
+                    <input type="text" 
+                           x-model="loginForm.username" 
+                           id="username" 
+                           name="username" 
+                           required
+                           :disabled="isLoading"
+                           placeholder="Enter username">
                 </div>
                 
                 <div class="form-group">
                     <label for="password">Password:</label>
-                    <input type="password" id="password" name="password" required>
+                    <input type="password" 
+                           x-model="loginForm.password" 
+                           id="password" 
+                           name="password" 
+                           required
+                           :disabled="isLoading"
+                           placeholder="Enter password">
                 </div>
                 
                 <div class="form-group">
-                    <button type="submit" class="btn-primary" style="width: 100%;">Login</button>
+                    <button type="submit" 
+                            class="btn-primary" 
+                            style="width: 100%;"
+                            :disabled="isLoading">
+                        <span x-show="!isLoading">Login</span>
+                        <span x-show="isLoading">Logging in...</span>
+                    </button>
                 </div>
             </form>
 
-            
             <div class="demo-accounts">
                 <h4 style="margin: 0 0 0.5rem 0;">Demo Accounts:</h4>
                 <p style="margin: 0.25rem 0;"><strong>Admin:</strong> admin / admin123</p>
@@ -70,151 +166,162 @@
             </div>
         </div>
         
-        <div id="ambulanceSelection" style="display:none;">
+        <!-- Ambulance Selection -->
+        <div x-show="showAmbulanceSelection" x-transition.opacity.duration.300ms class="form-section">
             <h3 style="color: #1976d2; margin-bottom: 1rem;">Select Your Ambulance</h3>
-            <div id="ambulanceList" style="display: grid; gap: 0.5rem;"></div>
-            <button onclick="proceedToDashboard()" class="btn-primary" style="width: 100%; margin-top: 1rem;">Continue</button>
+            
+            <div class="form-group" x-show="availableAmbulances.length > 0">
+                <label for="ambulanceDropdown" style="font-weight: 500; color: #1976d2;">Ambulance:</label>
+                <select x-model="selectedAmbulance" 
+                        id="ambulanceDropdown" 
+                        name="selectedAmbulance" 
+                        style="width: 100%; padding: 0.75rem; font-size: 1rem; border-radius: 8px; border: 2px solid #1976d2; margin-top: 0.5rem;">
+                    <option value="">Select Ambulance</option>
+                    <template x-for="ambulance in availableAmbulances" :key="ambulance.callSign">
+                        <option :value="ambulance.callSign" 
+                                x-text="`${ambulance.callSign} (${ambulance.type || 'Standard'}) - ${ambulance.location || 'Base Station'} - ${ambulance.status}`"></option>
+                    </template>
+                </select>
+            </div>
+            
+            <div x-show="availableAmbulances.length === 0" class="alert alert-warning">
+                <p>No ambulances available. Contact administrator.</p>
+            </div>
+            
+            <button @click="proceedToDashboard()" 
+                    class="btn-primary" 
+                    style="width: 100%; margin-top: 1rem;"
+                    :disabled="!selectedAmbulance || isLoading">
+                <span x-show="!isLoading">Continue</span>
+                <span x-show="isLoading">Processing...</span>
+            </button>
         </div>
     </main>
     
-    <script src="tools.js?v=2"></script>
-    <script src="version.js?v=2"></script>
     <script>
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const usernameInput = document.getElementById('username');
-            const passwordInput = document.getElementById('password');
-            
-            // Get values and check for spaces/trailing spaces
-            const originalUsername = usernameInput.value;
-            const originalPassword = passwordInput.value;
-            const username = originalUsername.trim();
-            const password = originalPassword.trim();
-            
-            // Validate for spaces and trailing spaces
-            if (originalUsername !== username) {
-                await showAlert('Username cannot have leading or trailing spaces');
-                usernameInput.focus();
-                return;
-            }
-            
-            if (originalPassword !== password) {
-                await showAlert('Password cannot have leading or trailing spaces');
-                passwordInput.focus();
-                return;
-            }
-            
-            if (username.includes(' ')) {
-                await showAlert('Username cannot contain spaces');
-                usernameInput.focus();
-                return;
-            }
-            
-            if (password.includes(' ')) {
-                await showAlert('Password cannot contain spaces');
-                passwordInput.focus();
-                return;
-            }
-            
-            // Check if fields are empty after trimming
-            if (!username || !password) {
-                await showAlert('Please enter both username and password');
-                return;
-            }
-            
-            const users = [
-                { username: 'admin', password: 'admin123', role: 'admin', name: 'Administrator' },
-                { username: 'paramedic', password: 'password123', role: 'paramedic', name: 'John Paramedic' },
-                { username: 'emt', password: 'emt123', role: 'emt', name: 'Jane EMT' }
-            ];
-            
-            const user = users.find(u => u.username === username && u.password === password);
-            
-            if (user) {
-                // Set login time
-                user.loginTime = new Date().toISOString();
+        function loginPage() {
+            return {
+                loginForm: {
+                    username: '',
+                    password: ''
+                },
+                showAmbulanceSelection: false,
+                availableAmbulances: [],
+                selectedAmbulance: '',
+                isLoading: false,
+                showInstallBanner: false,
+                deferredPrompt: null,
                 
-                localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('currentUser', JSON.stringify(user));
+                init() {
+                    // Check if already logged in
+                    if (this.$store.auth.isLoggedIn) {
+                        window.location.href = 'pages/dashboard.html';
+                        return;
+                    }
+                    
+                    // Setup PWA install prompt
+                    this.setupPWAInstall();
+                    
+                    // Load ambulances
+                    this.loadAmbulances();
+                },
                 
-                if (user.role === 'admin') {
-                    window.location.href = 'dashboard.html';
-                } else {
-                    showAmbulanceSelection();
+                setupPWAInstall() {
+                    window.addEventListener('beforeinstallprompt', (e) => {
+                        e.preventDefault();
+                        this.deferredPrompt = e;
+                        this.showInstallBanner = true;
+                    });
+                },
+                
+                async installApp() {
+                    if (!this.deferredPrompt) return;
+                    
+                    this.deferredPrompt.prompt();
+                    const { outcome } = await this.deferredPrompt.userChoice;
+                    
+                    if (outcome === 'accepted') {
+                        this.showInstallBanner = false;
+                    }
+                    
+                    this.deferredPrompt = null;
+                },
+                
+                loadAmbulances() {
+                    this.availableAmbulances = this.$store.ambulances.list || [];
+                },
+                
+                async handleLogin() {
+                    // Validation
+                    const username = this.loginForm.username.trim();
+                    const password = this.loginForm.password.trim();
+                    
+                    if (this.loginForm.username !== username) {
+                        await this.$store.ui.showAlert('Username cannot have leading or trailing spaces');
+                        return;
+                    }
+                    
+                    if (this.loginForm.password !== password) {
+                        await this.$store.ui.showAlert('Password cannot have leading or trailing spaces');
+                        return;
+                    }
+                    
+                    if (username.includes(' ')) {
+                        await this.$store.ui.showAlert('Username cannot contain spaces');
+                        return;
+                    }
+                    
+                    if (password.includes(' ')) {
+                        await this.$store.ui.showAlert('Password cannot contain spaces');
+                        return;
+                    }
+                    
+                    if (!username || !password) {
+                        await this.$store.ui.showAlert('Please enter both username and password');
+                        return;
+                    }
+                    
+                    this.isLoading = true;
+                    
+                    try {
+                        // Attempt login
+                        const result = this.$store.auth.login(username, password);
+                        
+                        if (result.success) {
+                            if (result.user.role === 'Administrator') {
+                                window.location.href = 'pages/dashboard.html';
+                            } else {
+                                this.showAmbulanceSelection = true;
+                                this.loadAmbulances();
+                            }
+                        } else {
+                            await this.$store.ui.showAlert(result.message || 'Invalid username or password');
+                        }
+                    } catch (error) {
+                        await this.$store.ui.showAlert('Login failed: ' + error.message);
+                    } finally {
+                        this.isLoading = false;
+                    }
+                },
+                
+                async proceedToDashboard() {
+                    if (!this.selectedAmbulance) {
+                        await this.$store.ui.showAlert('Please select an ambulance');
+                        return;
+                    }
+                    
+                    this.isLoading = true;
+                    
+                    try {
+                        this.$store.auth.assignAmbulance(this.selectedAmbulance);
+                        window.location.href = 'pages/dashboard.html';
+                    } catch (error) {
+                        await this.$store.ui.showAlert('Failed to assign ambulance: ' + error.message);
+                        this.isLoading = false;
+                    }
                 }
-            } else {
-                await showAlert('Invalid username or password');
             }
-        });
-        
-        function showAmbulanceSelection() {
-            document.getElementById('loginForm').style.display = 'none';
-            document.getElementById('ambulanceSelection').style.display = 'block';
-            
-            const ambulances = getAmbulances();
-            const ambulanceList = document.getElementById('ambulanceList');
-            
-            if (ambulances.length === 0) {
-                ambulanceList.innerHTML = '<p>No ambulances available. Contact administrator.</p>';
-                return;
-            }
-            
-            // Render a dropdown instead of cards
-            ambulanceList.innerHTML = `
-                <label for="ambulanceDropdown" style="font-weight: 500; color: #1976d2;">Ambulance:</label>
-                <select id="ambulanceDropdown" name="selectedAmbulance" style="width: 100%; padding: 0.75rem; font-size: 1rem; border-radius: 8px; border: 2px solid #1976d2; margin-top: 0.5rem;">
-                    <option value="">Select Ambulance</option>
-                    ${ambulances.map(amb => `<option value="${amb.callSign}">${amb.callSign} (${amb.type || 'Standard'}) - ${amb.location || 'Base Station'} - ${amb.status}</option>`).join('')}
-                </select>
-            `;
         }
-        
-        async function proceedToDashboard() {
-            const dropdown = document.getElementById('ambulanceDropdown');
-            const selectedAmbulance = dropdown && dropdown.value;
-            
-            if (!selectedAmbulance) {
-                await showAlert('Please select an ambulance');
-                return;
-            }
-            
-            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-            currentUser.assignedAmbulance = selectedAmbulance;
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            
-            window.location.href = 'dashboard.html';
-        }
-        
-        if (localStorage.getItem('isLoggedIn') === 'true') {
-            window.location.href = 'dashboard.html';
-        }
-
-        // PWA Install functionality
-        let deferredPrompt = null;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            document.getElementById('installBanner').style.display = 'block';
-        });
-        document.getElementById('installBtn').onclick = async function() {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') {
-                    document.getElementById('installBanner').style.display = 'none';
-                }
-                // If dismissed, keep banner visible for another try
-            }
-        };
-        window.addEventListener('appinstalled', () => {
-            document.getElementById('installBanner').style.display = 'none';
-        });
-        // Hide banner if already installed
-        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
-            document.getElementById('installBanner').style.display = 'none';
-        }
-
     </script>
 </body>
 </html> 

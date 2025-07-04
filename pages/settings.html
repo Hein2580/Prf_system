@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Settings - Ambulance PRF System</title>
+    <link rel="stylesheet" href="../assets/css/style.css?v=2">
+    
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Alpine.js Stores and Components -->
+    <script src="../assets/js/alpine-stores.js?v=1"></script>
+    <script src="../assets/js/alpine-components.js?v=1"></script>
+    <script src="../assets/js/tools.js?v=2"></script>
+    <script src="../assets/js/navigation.js?v=2"></script>
+    <script src="../assets/js/version.js?v=2"></script>
+    
+    <style>
+        .settings-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        .settings-section {
+            background: #f8f9fa;
+            margin: 2rem 0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #1976d2;
+        }
+        .settings-section h3 {
+            margin-top: 0;
+            color: #1976d2;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 0.5rem;
+        }
+        .settings-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .settings-description {
+            flex: 1;
+            min-width: 200px;
+        }
+        .settings-controls {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .file-input-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .file-input-container input[type="file"] {
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: white;
+        }
+        .warning-text {
+            color: #b71c1c;
+            font-weight: 500;
+            margin: 0.5rem 0;
+        }
+        .system-info {
+            background: #e3f2fd;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #2196f3;
+        }
+        .system-info p {
+            margin: 0.5rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .success-message {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 0.75rem 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+            border-left: 4px solid #4caf50;
+        }
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 0.75rem 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+            border-left: 4px solid #f44336;
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .checkbox-label input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            cursor: pointer;
+        }
+        .dark-mode .settings-section {
+            background: #3d3d3d;
+        }
+        .dark-mode .system-info {
+            background: #2d2d2d;
+            border-color: #1976d2;
+        }
+        .dark-mode .success-message {
+            background: #1b5e20;
+            color: #c8e6c9;
+        }
+        .dark-mode .error-message {
+            background: #b71c1c;
+            color: #ffcdd2;
+        }
+        .dark-mode .file-input-container input[type="file"] {
+            background: #3d3d3d;
+            color: #ccc;
+            border-color: #555;
+        }
+    </style>
+</head>
+<body x-data="settingsPage()" x-init="init()">
+    <header>
+        <h1>Settings</h1>
+        <p>Manage your system preferences and data</p>
+    </header>
+    
+    <div style="text-align: center; margin: 1rem 0;">
+        <a href="dashboard.html" class="back-button" style="display: inline-block; text-decoration: none; background: #1976d2; color: white; padding: 0.75rem 1.5rem; border-radius: 25px; font-weight: 500; box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3); transition: all 0.2s ease;">← Back to Dashboard</a>
+    </div>
+    
+    <main class="settings-container">
+        <!-- Success/Error Messages -->
+        <div x-show="successMessage" 
+             x-transition.opacity.duration.300ms 
+             class="success-message"
+             x-text="successMessage"></div>
+        
+        <div x-show="errorMessage" 
+             x-transition.opacity.duration.300ms 
+             class="error-message"
+             x-text="errorMessage"></div>
+
+        <!-- Data Management Section -->
+        <div class="settings-section">
+            <h3>📊 Data Management</h3>
+            
+            <!-- Export Data -->
+            <div class="settings-row">
+                <div class="settings-description">
+                    <h4>Export Data</h4>
+                    <p>Export all your data as a JSON file for backup purposes.</p>
+                </div>
+                <div class="settings-controls">
+                    <button @click="exportData()" class="btn" style="background:#1976d2;color:white;">
+                        Export All Data
+                    </button>
+                    <button @click="downloadData()" class="btn" style="background:#4b5563;color:white;">
+                        Download Data
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Import Data -->
+            <div class="settings-row">
+                <div class="settings-description">
+                    <h4>Import Data</h4>
+                    <p>Import data from a previously exported JSON file.</p>
+                </div>
+                <div class="file-input-container">
+                    <input type="file" 
+                           x-ref="importFile" 
+                           accept=".json" 
+                           @change="selectedFile = $event.target.files[0]">
+                    <button @click="importData()" class="btn" :disabled="!selectedFile">
+                        Import Data
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Clear All Data -->
+            <div class="settings-row">
+                <div class="settings-description">
+                    <h4>Clear All Data</h4>
+                    <p class="warning-text">⚠️ Warning: This will delete all ambulances, checklists, and PRFs!</p>
+                </div>
+                <div class="settings-controls">
+                    <button @click="clearAllData()" class="btn" style="background:#b71c1c;color:white;">
+                        Clear All Data
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appearance Section -->
+        <div class="settings-section">
+            <h3>🎨 Appearance</h3>
+            
+            <!-- Dark Mode -->
+            <div class="settings-row">
+                <div class="settings-description">
+                    <h4>Dark Mode</h4>
+                    <p>Toggle between light and dark themes for better visibility.</p>
+                </div>
+                <div class="settings-controls">
+                    <label class="checkbox-label">
+                        <input type="checkbox" 
+                               x-model="$store.ui.darkMode" 
+                               @change="toggleDarkMode()">
+                        <span>Enable Dark Mode</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Information Section -->
+        <div class="settings-section">
+            <h3>ℹ️ System Information</h3>
+            <div class="system-info">
+                <p>
+                    <strong>Ambulances:</strong>
+                    <span x-text="systemInfo.ambulanceCount"></span>
+                </p>
+                <p>
+                    <strong>PRF Records:</strong>
+                    <span x-text="systemInfo.prfCount"></span>
+                </p>
+                <p>
+                    <strong>Checklist Items:</strong>
+                    <span x-text="systemInfo.checklistCount"></span>
+                </p>
+                <p>
+                    <strong>Trip Records:</strong>
+                    <span x-text="systemInfo.tripCount"></span>
+                </p>
+                <p>
+                    <strong>Storage Used:</strong>
+                    <span x-text="systemInfo.storageUsed + ' KB'"></span>
+                </p>
+                <p>
+                    <strong>Last Updated:</strong>
+                    <span x-text="systemInfo.lastUpdated"></span>
+                </p>
+            </div>
+        </div>
+
+        <!-- User Information Section (Admin Only) -->
+        <div class="settings-section" x-show="$store.auth.isAdmin">
+            <h3>👥 User Management</h3>
+            <div class="system-info">
+                <p>
+                    <strong>Current User:</strong>
+                    <span x-text="$store.auth.currentUser.name + ' (' + $store.auth.currentUser.role + ')'"></span>
+                </p>
+                <p>
+                    <strong>Login Time:</strong>
+                    <span x-text="loginTime"></span>
+                </p>
+                <p x-show="$store.auth.currentUser.assignedAmbulance">
+                    <strong>Assigned Ambulance:</strong>
+                    <span x-text="$store.auth.currentUser.assignedAmbulance"></span>
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function settingsPage() {
+            return {
+                successMessage: '',
+                errorMessage: '',
+                selectedFile: null,
+                loginTime: '',
+                systemInfo: {
+                    ambulanceCount: 0,
+                    prfCount: 0,
+                    checklistCount: 0,
+                    tripCount: 0,
+                    storageUsed: 0,
+                    lastUpdated: ''
+                },
+                
+                init() {
+                    // Check authentication
+                    if (!this.$store.auth.isLoggedIn) {
+                        window.location.href = '../index.html';
+                        return;
+                    }
+                    
+                    // Apply dark mode
+                    if (this.$store.ui.darkMode) {
+                        document.body.classList.add('dark-mode');
+                    }
+                    
+                    this.updateSystemInfo();
+                    this.setLoginTime();
+                },
+                
+                updateSystemInfo() {
+                    // Count ambulances
+                    this.systemInfo.ambulanceCount = this.$store.ambulances.ambulances.length;
+                    
+                    // Count PRFs
+                    const prfs = JSON.parse(localStorage.getItem('prfs') || '[]');
+                    this.systemInfo.prfCount = prfs.length;
+                    
+                    // Count checklist items (across all ambulances)
+                    let checklistCount = 0;
+                    this.$store.ambulances.ambulances.forEach(ambulance => {
+                        const items = JSON.parse(localStorage.getItem(`checklist_items_${ambulance.callSign}`) || '[]');
+                        checklistCount += items.length;
+                    });
+                    this.systemInfo.checklistCount = checklistCount;
+                    
+                    // Count trip records
+                    this.systemInfo.tripCount = this.$store.trips.allTrips.length;
+                    
+                    // Calculate storage usage
+                    let totalSize = 0;
+                    for (let key in localStorage) {
+                        if (localStorage.hasOwnProperty(key)) {
+                            totalSize += localStorage[key].length;
+                        }
+                    }
+                    this.systemInfo.storageUsed = Math.round(totalSize / 1024);
+                    
+                    // Last updated
+                    this.systemInfo.lastUpdated = new Date().toLocaleString();
+                },
+                
+                setLoginTime() {
+                    const loginTime = localStorage.getItem('loginTime');
+                    if (loginTime) {
+                        this.loginTime = new Date(loginTime).toLocaleString();
+                    } else {
+                        this.loginTime = 'Unknown';
+                    }
+                },
+                
+                async exportData() {
+                    try {
+                        const data = this.getAllData();
+                        const jsonString = JSON.stringify(data, null, 2);
+                        const blob = new Blob([jsonString], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `ambulance-prf-backup-${new Date().toISOString().split('T')[0]}.json`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        this.showSuccessMessage('Data exported successfully!');
+                    } catch (error) {
+                        this.showErrorMessage('Export failed: ' + error.message);
+                    }
+                },
+                
+                async downloadData() {
+                    try {
+                        const data = this.getAllData();
+                        const jsonString = JSON.stringify(data, null, 2);
+                        const blob = new Blob([jsonString], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `ambulance-prf-backup-${new Date().toISOString().split('T')[0]}.json`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        this.showSuccessMessage('Data downloaded successfully!');
+                    } catch (error) {
+                        this.showErrorMessage('Download failed: ' + error.message);
+                    }
+                },
+                
+                async importData() {
+                    if (!this.selectedFile) {
+                        this.showErrorMessage('Please select a file to import');
+                        return;
+                    }
+                    
+                    try {
+                        const text = await this.selectedFile.text();
+                        const data = JSON.parse(text);
+                        
+                        // Validate data structure
+                        if (!data || typeof data !== 'object') {
+                            throw new Error('Invalid file format');
+                        }
+                        
+                        // Confirm before importing
+                        const confirmed = await this.$store.ui.showConfirm(
+                            'This will replace all existing data. Are you sure you want to continue?',
+                            'Import Data'
+                        );
+                        
+                        if (confirmed) {
+                            this.importAllData(data);
+                            this.showSuccessMessage('Data imported successfully! Please refresh the page.');
+                            this.updateSystemInfo();
+                            this.selectedFile = null;
+                            this.$refs.importFile.value = '';
+                        }
+                    } catch (error) {
+                        this.showErrorMessage('Import failed: ' + error.message);
+                    }
+                },
+                
+                async clearAllData() {
+                    const confirmed = await this.$store.ui.showConfirm(
+                        'This will permanently delete ALL data including ambulances, PRFs, checklists, and trips. This action cannot be undone!',
+                        'Clear All Data'
+                    );
+                    
+                    if (confirmed) {
+                        // Clear all localStorage except login state
+                        const keysToKeep = ['isLoggedIn', 'currentUser', 'loginTime'];
+                        const keys = Object.keys(localStorage);
+                        
+                        keys.forEach(key => {
+                            if (!keysToKeep.includes(key)) {
+                                localStorage.removeItem(key);
+                            }
+                        });
+                        
+                        // Reset stores
+                        this.$store.ambulances.ambulances = [];
+                        this.$store.trips.trips = [];
+                        
+                        this.showSuccessMessage('All data cleared successfully! Please refresh the page.');
+                        this.updateSystemInfo();
+                    }
+                },
+                
+                toggleDarkMode() {
+                    if (this.$store.ui.darkMode) {
+                        document.body.classList.add('dark-mode');
+                        this.showSuccessMessage('Dark mode enabled');
+                    } else {
+                        document.body.classList.remove('dark-mode');
+                        this.showSuccessMessage('Dark mode disabled');
+                    }
+                },
+                
+                getAllData() {
+                    const data = {};
+                    
+                    // Get all localStorage data except sensitive login info
+                    const keysToExclude = ['isLoggedIn', 'currentUser', 'loginTime'];
+                    
+                    Object.keys(localStorage).forEach(key => {
+                        if (!keysToExclude.includes(key)) {
+                            try {
+                                data[key] = JSON.parse(localStorage.getItem(key));
+                            } catch (e) {
+                                data[key] = localStorage.getItem(key);
+                            }
+                        }
+                    });
+                    
+                    // Add metadata
+                    data._metadata = {
+                        exportDate: new Date().toISOString(),
+                        version: '1.0',
+                        exportedBy: this.$store.auth.currentUser.name
+                    };
+                    
+                    return data;
+                },
+                
+                importAllData(data) {
+                    // Remove metadata before importing
+                    const { _metadata, ...importData } = data;
+                    
+                    // Import all data
+                    Object.keys(importData).forEach(key => {
+                        if (typeof importData[key] === 'object') {
+                            localStorage.setItem(key, JSON.stringify(importData[key]));
+                        } else {
+                            localStorage.setItem(key, importData[key]);
+                        }
+                    });
+                    
+                    // Refresh stores
+                    this.$store.ambulances.loadAmbulances();
+                    this.$store.trips.loadTrips();
+                },
+                
+                showSuccessMessage(message) {
+                    this.successMessage = message;
+                    this.errorMessage = '';
+                    setTimeout(() => {
+                        this.successMessage = '';
+                    }, 3000);
+                },
+                
+                showErrorMessage(message) {
+                    this.errorMessage = message;
+                    this.successMessage = '';
+                    setTimeout(() => {
+                        this.errorMessage = '';
+                    }, 3000);
+                }
+            }
+        }
+    </script>
+</body>
+</html> 

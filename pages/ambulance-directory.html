@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Ambulance Directory</title>
+    <link rel="stylesheet" href="../assets/css/style.css?v=2">
+    
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Alpine.js Stores and Components -->
+    <script src="../assets/js/alpine-stores.js?v=1"></script>
+    <script src="../assets/js/alpine-components.js?v=1"></script>
+    <script src="../assets/js/tools.js?v=2"></script>
+    <script src="../assets/js/navigation.js?v=2"></script>
+    <script src="../assets/js/version.js?v=2"></script>
+    
+    <style>
+        .status-toggle {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+        .status-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #b71c1c;
+            transition: .4s;
+            border-radius: 30px;
+        }
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .toggle-slider {
+            background-color: #2e7d32;
+        }
+        input:checked + .toggle-slider:before {
+            transform: translateX(30px);
+        }
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-align: center;
+            min-width: 80px;
+            display: inline-block;
+        }
+        .status-available {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+        .status-on-call {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        .status-out-of-service {
+            background: #ffebee;
+            color: #b71c1c;
+        }
+        .dark-mode .status-available {
+            background: #1b5e20;
+            color: #c8e6c9;
+        }
+        .dark-mode .status-on-call {
+            background: #e65100;
+            color: #ffcc02;
+        }
+        .dark-mode .status-out-of-service {
+            background: #8e0000;
+            color: #ffcdd2;
+        }
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .toggle-label {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        .dark-mode .toggle-label {
+            color: #b0b0b0;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+        .modal-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 90%;
+            max-height: calc(100vh - 2rem);
+            overflow-y: auto;
+        }
+        .modal-header {
+            padding: 1.25rem;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .modal-header h3 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        .modal-body {
+            padding: 1.25rem;
+            line-height: 1.6;
+        }
+        .modal-footer {
+            padding: 1.25rem;
+            border-top: 2px solid #e0e0e0;
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+        }
+        .modal-footer button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .dark-mode .modal-container {
+            background: #1f2937;
+            color: #f9fafb;
+        }
+        .dark-mode .modal-header {
+            border-bottom-color: #374151;
+        }
+        .dark-mode .modal-footer {
+            border-top-color: #374151;
+        }
+        .dark-mode .modal-header h3 {
+            color: #f9fafb;
+        }
+        .success-message {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 0.75rem 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+            border-left: 4px solid #4caf50;
+        }
+        .dark-mode .success-message {
+            background: #1b5e20;
+            color: #c8e6c9;
+        }
+    </style>
+</head>
+<body x-data="ambulanceDirectoryPage()" x-init="init()">
+    <header>
+        <h1>Ambulance Directory</h1>
+        <p>Manage your ambulance fleet</p>
+    </header>
+    
+    <div style="text-align: center; margin: 1rem 0;">
+        <a href="dashboard.html" class="back-button" style="display: inline-block; text-decoration: none; background: #1976d2; color: white; padding: 0.75rem 1.5rem; border-radius: 25px; font-weight: 500; box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3); transition: all 0.2s ease;">← Back to Dashboard</a>
+    </div>
+    
+    <main>
+        <h2>Ambulances</h2>
+        
+        <!-- Success Message -->
+        <div x-show="successMessage" 
+             x-transition.opacity.duration.300ms 
+             class="success-message"
+             x-text="successMessage"></div>
+        
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Call Sign</th>
+                        <th>Status</th>
+                        <th>Quick Toggle</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template x-for="(ambulance, index) in ambulances" :key="ambulance.callSign">
+                        <tr>
+                            <td><strong x-text="ambulance.callSign"></strong></td>
+                            <td>
+                                <span :class="`status-badge ${getStatusClass(ambulance.status)}`" 
+                                      x-text="ambulance.status"></span>
+                            </td>
+                            <td>
+                                <div class="toggle-container">
+                                    <span class="toggle-label">Off</span>
+                                    <label class="status-toggle">
+                                        <input type="checkbox" 
+                                               :checked="ambulance.status === 'Available'"
+                                               @change="toggleAmbulanceStatus(index)">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                    <span class="toggle-label">On</span>
+                                </div>
+                            </td>
+                            <td>
+                                <button @click="startEdit(index)">Edit</button>
+                                <button @click="deleteAmbulance(index)" 
+                                        style="background:#b71c1c;">Delete</button>
+                            </td>
+                        </tr>
+                    </template>
+                    <tr x-show="ambulances.length === 0">
+                        <td colspan="4" style="text-align: center; padding: 2rem; color: #666;">
+                            No ambulances added yet. Use the form below to add your first ambulance.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <h3 x-text="editingIndex === -1 ? 'Add Ambulance' : 'Edit Ambulance'"></h3>
+        
+        <form @submit.prevent="saveAmbulance()">
+            <label for="callSign">Call Sign</label>
+            <input type="text" 
+                   x-model="editForm.callSign" 
+                   id="callSign" 
+                   name="callSign" 
+                   required
+                   placeholder="e.g., A1, B2, Rescue1"
+                   style="text-transform: uppercase;">
+            
+            <label for="status">Status</label>
+            <select x-model="editForm.status" id="status" name="status">
+                <option value="Available">Available</option>
+                <option value="On Call">On Call</option>
+                <option value="Out of Service">Out of Service</option>
+            </select>
+            
+            <button type="submit" 
+                    x-text="editingIndex === -1 ? 'Add Ambulance' : 'Update Ambulance'"></button>
+            <button type="button" 
+                    @click="cancelEdit()" 
+                    x-show="editingIndex !== -1" 
+                    style="margin-left:1rem;">Cancel</button>
+        </form>
+    </main>
+
+    <script>
+        function ambulanceDirectoryPage() {
+            return {
+                ambulances: [],
+                editingIndex: -1,
+                editForm: {
+                    callSign: '',
+                    status: 'Available'
+                },
+                successMessage: '',
+                
+                init() {
+                    // Check authentication
+                    if (!this.$store.auth.isLoggedIn) {
+                        window.location.href = '../index.html';
+                        return;
+                    }
+                    
+                    // Check if user is admin
+                    if (!this.$store.auth.isAdmin) {
+                        this.$store.ui.showAlert('Access denied. Administrator privileges required.', 'Access Denied')
+                            .then(() => {
+                                window.location.href = 'dashboard.html';
+                            });
+                        return;
+                    }
+                    
+                    // Apply dark mode
+                    if (this.$store.ui.darkMode) {
+                        document.body.classList.add('dark-mode');
+                    }
+                    
+                    // Load ambulances
+                    this.loadAmbulances();
+                },
+                
+                loadAmbulances() {
+                    this.ambulances = this.$store.ambulances.list;
+                },
+                
+                getStatusClass(status) {
+                    switch(status) {
+                        case 'Available': return 'status-available';
+                        case 'On Call': return 'status-on-call';
+                        case 'Out of Service': return 'status-out-of-service';
+                        default: return 'status-available';
+                    }
+                },
+                
+                async saveAmbulance() {
+                    const callSign = this.editForm.callSign.trim().toUpperCase();
+                    const status = this.editForm.status;
+                    
+                    if (!callSign) {
+                        await this.$store.ui.showAlert('Please enter a call sign', 'Missing Information');
+                        return;
+                    }
+                    
+                    try {
+                        if (this.editingIndex === -1) {
+                            // Adding new ambulance
+                            this.$store.ambulances.add({ callSign, status });
+                            this.showSuccessMessage('Ambulance added successfully!');
+                        } else {
+                            // Editing existing ambulance
+                            this.$store.ambulances.update(this.editingIndex, { callSign, status });
+                            this.showSuccessMessage('Ambulance updated successfully!');
+                        }
+                        
+                        this.loadAmbulances();
+                        this.cancelEdit();
+                        
+                    } catch (error) {
+                        await this.$store.ui.showAlert(error.message, 'Error');
+                    }
+                },
+                
+                startEdit(index) {
+                    this.editingIndex = index;
+                    const ambulance = this.ambulances[index];
+                    this.editForm = { ...ambulance };
+                },
+                
+                cancelEdit() {
+                    this.editingIndex = -1;
+                    this.editForm = { callSign: '', status: 'Available' };
+                },
+                
+                async deleteAmbulance(index) {
+                    const ambulance = this.ambulances[index];
+                    const confirmed = await this.$store.ui.showConfirm(
+                        `Delete ambulance ${ambulance.callSign}?`, 
+                        'Delete Ambulance'
+                    );
+                    
+                    if (confirmed) {
+                        this.$store.ambulances.delete(index);
+                        this.loadAmbulances();
+                        this.showSuccessMessage('Ambulance deleted successfully!');
+                        
+                        // Cancel edit if we're editing the deleted ambulance
+                        if (this.editingIndex === index) {
+                            this.cancelEdit();
+                        } else if (this.editingIndex > index) {
+                            // Adjust edit index if needed
+                            this.editingIndex--;
+                        }
+                    }
+                },
+                
+                toggleAmbulanceStatus(index) {
+                    const ambulance = this.ambulances[index];
+                    const newStatus = ambulance.status === 'Available' ? 'Out of Service' : 'Available';
+                    
+                    try {
+                        this.$store.ambulances.update(index, { ...ambulance, status: newStatus });
+                        this.loadAmbulances();
+                        this.showSuccessMessage(`${ambulance.callSign} set to ${newStatus}`);
+                    } catch (error) {
+                        this.$store.ui.showAlert(error.message, 'Error');
+                    }
+                },
+                
+                showSuccessMessage(message) {
+                    this.successMessage = message;
+                    setTimeout(() => {
+                        this.successMessage = '';
+                    }, 3000);
+                }
+            }
+        }
+    </script>
+</body>
+</html>

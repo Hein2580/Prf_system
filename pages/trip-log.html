@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Ambulance Trip Log</title>
+    <link rel="stylesheet" href="../assets/css/style.css?v=2">
+    
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Alpine.js Stores and Components -->
+    <script src="../assets/js/alpine-stores.js?v=1"></script>
+    <script src="../assets/js/alpine-components.js?v=1"></script>
+    <script src="../assets/js/tools.js?v=2"></script>
+    <script src="../assets/js/navigation.js?v=2"></script>
+    <script src="../assets/js/version.js?v=2"></script>
+    
+    <style>
+        .trip-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .trip-section {
+            background: #f8f9fa;
+            margin: 1rem 0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #1976d2;
+        }
+        .trip-section h3 {
+            margin-top: 0;
+            color: #1976d2;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 0.5rem;
+        }
+        .trip-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .summary-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        .summary-card h4 {
+            margin: 0 0 0.5rem 0;
+            color: #1976d2;
+            font-size: 0.9rem;
+        }
+        .summary-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+        }
+        .status-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 120px;
+        }
+        .status-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .status-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+            justify-content: center;
+        }
+        .trip-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .status-active {
+            background: #4caf50;
+            color: white;
+        }
+        .status-completed {
+            background: #2196f3;
+            color: white;
+        }
+        .status-cancelled {
+            background: #f44336;
+            color: white;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group label {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+            font-size: 0.9rem;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+        .dark-mode .trip-section {
+            background: #3d3d3d;
+        }
+        .dark-mode .summary-card {
+            background: #3d3d3d;
+            border-color: #555;
+        }
+        .success-message {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 0.75rem 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+            border-left: 4px solid #4caf50;
+        }
+        .dark-mode .success-message {
+            background: #1b5e20;
+            color: #c8e6c9;
+        }
+    </style>
+</head>
+<body x-data="tripLogPage()" x-init="init()">
+    <header>
+        <h1>Ambulance Trip Log</h1>
+        <p>Comprehensive Trip Tracking & Vehicle Management</p>
+    </header>
+    
+    <div style="text-align: center; margin: 1rem 0;">
+        <a href="dashboard.html" class="back-button" style="display: inline-block; text-decoration: none; background: #1976d2; color: white; padding: 0.75rem 1.5rem; border-radius: 25px; font-weight: 500; box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3); transition: all 0.2s ease;">← Back to Dashboard</a>
+    </div>
+    
+    <main class="trip-container">
+        <!-- Success Message -->
+        <div x-show="successMessage" 
+             x-transition.opacity.duration.300ms 
+             class="success-message"
+             x-text="successMessage"></div>
+
+        <!-- Today's Summary -->
+        <div class="trip-section">
+            <h3>Today's Summary</h3>
+            <div class="trip-summary">
+                <div class="summary-card">
+                    <h4>Active Trips</h4>
+                    <div class="summary-value" x-text="$store.trips.activeTrips.length"></div>
+                </div>
+                <div class="summary-card">
+                    <h4>Completed Trips</h4>
+                    <div class="summary-value" x-text="$store.trips.completedTrips.length"></div>
+                </div>
+                <div class="summary-card">
+                    <h4>Total Kilometers</h4>
+                    <div class="summary-value" x-text="$store.trips.totalKilometers.toFixed(1)"></div>
+                </div>
+                <div class="summary-card">
+                    <h4>Fuel Used</h4>
+                    <div class="summary-value" x-text="$store.trips.fuelUsed.toFixed(1) + ' L'"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Start Trip -->
+        <div class="trip-section" x-show="!$store.trips.currentTrip">
+            <h3>🚨 Quick Start Trip</h3>
+            <div class="status-buttons" style="justify-content: center; margin: 2rem 0;">
+                <button @click="startQuickTrip('Emergency Call')" 
+                        class="status-btn" 
+                        style="background: #f44336; color: white; font-size: 1.2rem; padding: 1rem 2rem;">
+                    🚨 EMERGENCY CALL
+                </button>
+                <button @click="startQuickTrip('Non-Emergency Transport')" 
+                        class="status-btn" 
+                        style="background: #2196f3; color: white; font-size: 1.2rem; padding: 1rem 2rem;">
+                    🏥 TRANSPORT
+                </button>
+                <button @click="startQuickTrip('Training')" 
+                        class="status-btn" 
+                        style="background: #4caf50; color: white; font-size: 1.2rem; padding: 1rem 2rem;">
+                    📚 TRAINING
+                </button>
+            </div>
+            <p style="text-align: center; color: #666; font-style: italic;">One-click trip start with automatic date/time capture</p>
+        </div>
+
+        <!-- Manual Trip Entry -->
+        <div class="trip-section" x-show="showManualForm && !$store.trips.currentTrip">
+            <h3>Manual Trip Entry</h3>
+            <form @submit.prevent="startManualTrip()">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tripType">Trip Type</label>
+                        <select x-model="manualTripForm.tripType" id="tripType" required>
+                            <option value="Emergency Call">Emergency Call</option>
+                            <option value="Non-Emergency Transport">Non-Emergency Transport</option>
+                            <option value="Training">Training</option>
+                            <option value="Maintenance">Maintenance</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="destination">Destination (Optional)</label>
+                        <input type="text" 
+                               x-model="manualTripForm.destination" 
+                               id="destination" 
+                               placeholder="Will be updated later">
+                    </div>
+                </div>
+                <div style="text-align: center; margin: 1rem 0;">
+                    <button type="submit">Start Manual Trip</button>
+                    <button type="button" 
+                            @click="showManualForm = false" 
+                            style="background: #666; margin-left: 1rem;">Cancel</button>
+                </div>
+            </form>
+        </div>
+        
+        <div style="text-align: center; margin: 1rem 0;" x-show="!$store.trips.currentTrip">
+            <button @click="showManualForm = !showManualForm" 
+                    style="background: #666; color: white; padding: 0.5rem 1rem;"
+                    x-text="showManualForm ? 'Hide Manual Entry' : 'Manual Entry'"></button>
+        </div>
+
+        <!-- Active Trip Section -->
+        <div class="trip-section" x-show="$store.trips.currentTrip">
+            <h3>Current Trip</h3>
+            <div x-show="$store.trips.currentTrip" class="trip-summary">
+                <div class="summary-card">
+                    <h4>Trip Type</h4>
+                    <div class="summary-value" x-text="$store.trips.currentTrip?.tripType || 'N/A'"></div>
+                </div>
+                <div class="summary-card">
+                    <h4>Ambulance</h4>
+                    <div class="summary-value" x-text="$store.trips.currentTrip?.ambulanceUnit || 'N/A'"></div>
+                </div>
+                <div class="summary-card">
+                    <h4>Start Time</h4>
+                    <div class="summary-value" x-text="$store.trips.currentTrip?.startTime || 'N/A'"></div>
+                </div>
+                <div class="summary-card">
+                    <h4>Status</h4>
+                    <div class="summary-value" x-text="$store.trips.currentTrip?.currentStatus || 'Started'"></div>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin: 1rem 0;">
+                <button @click="completeTrip()" 
+                        style="background: #4caf50; color: white; font-size: 1.1rem; padding: 0.75rem 2rem;">
+                    ✅ Complete Trip
+                </button>
+                <button @click="cancelTrip()" 
+                        style="background:#f44336; color: white; margin-left:1rem; padding: 0.75rem 2rem;">
+                    ❌ Cancel Trip
+                </button>
+            </div>
+        </div>
+
+        <!-- Trip History -->
+        <div class="trip-section">
+            <h3>Trip History</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Ambulance</th>
+                            <th>Type</th>
+                            <th>Driver</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-for="trip in $store.trips.todayTrips" :key="trip.id">
+                            <tr>
+                                <td x-text="trip.tripDate"></td>
+                                <td x-text="trip.ambulanceUnit"></td>
+                                <td x-text="trip.tripType"></td>
+                                <td x-text="trip.driver"></td>
+                                <td>
+                                    <span :class="`trip-status status-${trip.status}`" x-text="trip.status"></span>
+                                </td>
+                            </tr>
+                        </template>
+                        <tr x-show="$store.trips.todayTrips.length === 0">
+                            <td colspan="5" style="text-align: center; padding: 2rem; color: #666;">
+                                No trips found for today.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function tripLogPage() {
+            return {
+                showManualForm: false,
+                successMessage: '',
+                manualTripForm: {
+                    tripType: 'Emergency Call',
+                    destination: ''
+                },
+                
+                init() {
+                    // Check authentication
+                    if (!this.$store.auth.isLoggedIn) {
+                        window.location.href = '../index.html';
+                        return;
+                    }
+                    
+                    // Check if user has ambulance access
+                    if (!this.$store.auth.hasAmbulanceAccess) {
+                        this.$store.ui.showAlert('You need to be assigned an ambulance to access trip log.', 'Access Denied')
+                            .then(() => {
+                                window.location.href = 'dashboard.html';
+                            });
+                        return;
+                    }
+                    
+                    // Apply dark mode
+                    if (this.$store.ui.darkMode) {
+                        document.body.classList.add('dark-mode');
+                    }
+                },
+                
+                async startQuickTrip(tripType) {
+                    const currentUser = this.$store.auth.currentUser;
+                    if (!currentUser?.assignedAmbulance) {
+                        await this.$store.ui.showAlert('No ambulance assigned. Please contact administrator.', 'No Ambulance');
+                        return;
+                    }
+                    
+                    const tripData = {
+                        ambulanceUnit: currentUser.assignedAmbulance,
+                        tripDate: new Date().toISOString().split('T')[0],
+                        startTime: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                        tripType: tripType,
+                        destination: 'TBD',
+                        driver: currentUser.name,
+                        fuelLevel: 75,
+                        vehicleCondition: 'Good',
+                        defects: '',
+                        purpose: 'Quick start',
+                        startMileage: 0
+                    };
+                    
+                    this.$store.trips.startTrip(tripData);
+                    this.showSuccessMessage('Trip started successfully!');
+                },
+                
+                async startManualTrip() {
+                    const currentUser = this.$store.auth.currentUser;
+                    if (!currentUser?.assignedAmbulance) {
+                        await this.$store.ui.showAlert('No ambulance assigned. Please contact administrator.', 'No Ambulance');
+                        return;
+                    }
+                    
+                    const tripData = {
+                        ambulanceUnit: currentUser.assignedAmbulance,
+                        tripDate: new Date().toISOString().split('T')[0],
+                        startTime: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                        tripType: this.manualTripForm.tripType,
+                        destination: this.manualTripForm.destination || 'TBD',
+                        driver: currentUser.name,
+                        fuelLevel: 75,
+                        vehicleCondition: 'Good',
+                        defects: '',
+                        purpose: 'Manual entry',
+                        startMileage: 0
+                    };
+                    
+                    this.$store.trips.startTrip(tripData);
+                    this.showManualForm = false;
+                    this.manualTripForm = { tripType: 'Emergency Call', destination: '' };
+                    this.showSuccessMessage('Trip started successfully!');
+                },
+                
+                async completeTrip() {
+                    const confirmed = await this.$store.ui.showConfirm('Are you sure you want to complete this trip?', 'Complete Trip');
+                    if (confirmed) {
+                        this.$store.trips.completeTrip();
+                        this.showSuccessMessage('Trip completed successfully!');
+                    }
+                },
+                
+                async cancelTrip() {
+                    const confirmed = await this.$store.ui.showConfirm('Are you sure you want to cancel this trip?', 'Cancel Trip');
+                    if (confirmed) {
+                        this.$store.trips.cancelTrip();
+                        this.showSuccessMessage('Trip cancelled');
+                    }
+                },
+                
+                showSuccessMessage(message) {
+                    this.successMessage = message;
+                    setTimeout(() => {
+                        this.successMessage = '';
+                    }, 3000);
+                }
+            }
+        }
+    </script>
+</body>
+</html> 

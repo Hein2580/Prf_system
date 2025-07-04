@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Ambulance Checklist</title>
+    <link rel="stylesheet" href="../assets/css/style.css?v=2">
+    
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Alpine.js Stores and Components -->
+    <script src="../assets/js/alpine-stores.js?v=1"></script>
+    <script src="../assets/js/alpine-components.js?v=1"></script>
+    <script src="../assets/js/tools.js?v=2"></script>
+    <script src="../assets/js/navigation.js?v=2"></script>
+    <script src="../assets/js/version.js?v=2"></script>
+    
+    <style>
+        .checklist-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        .checklist-section {
+            background: #f8f9fa;
+            margin: 1rem 0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #1976d2;
+        }
+        .checklist-summary {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .checklist-summary h3 {
+            margin: 0 0 0.5rem 0;
+            color: #1976d2;
+        }
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 0.5rem;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .progress-container {
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            height: 20px;
+            margin: 1rem 0;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50, #8bc34a);
+            transition: width 0.3s ease;
+        }
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .quantity-btn {
+            background: #2196f3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .quantity-input-field {
+            width: 60px;
+            text-align: center;
+            padding: 0.25rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        .add-item-form {
+            display: flex;
+            gap: 1rem;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+        }
+        .add-item-form input {
+            flex: 1;
+            min-width: 200px;
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .quantity-input {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .quantity-input input {
+            width: 80px;
+            text-align: center;
+        }
+        .status-complete {
+            color: #4caf50;
+        }
+        .status-incomplete {
+            color: #f44336;
+        }
+        .success-message {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 0.75rem 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+            border-left: 4px solid #4caf50;
+        }
+        .dark-mode .checklist-section {
+            background: #3d3d3d;
+        }
+        .dark-mode .checklist-summary {
+            background: #2d2d2d;
+            border-color: #1976d2;
+        }
+        .dark-mode .stat-item {
+            background: #3d3d3d;
+            border-color: #555;
+        }
+        .dark-mode .success-message {
+            background: #1b5e20;
+            color: #c8e6c9;
+        }
+    </style>
+</head>
+<body x-data="checklistPage()" x-init="init()">
+    <header>
+        <h1>Ambulance Checklist</h1>
+        <p>Complete your daily/shift ambulance checks</p>
+    </header>
+    
+    <div style="text-align: center; margin: 1rem 0;">
+        <a href="dashboard.html" class="back-button" style="display: inline-block; text-decoration: none; background: #1976d2; color: white; padding: 0.75rem 1.5rem; border-radius: 25px; font-weight: 500; box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3); transition: all 0.2s ease;">← Back to Dashboard</a>
+    </div>
+    
+    <main class="checklist-container">
+        <!-- Success Message -->
+        <div x-show="successMessage" 
+             x-transition.opacity.duration.300ms 
+             class="success-message"
+             x-text="successMessage"></div>
+
+        <!-- Ambulance Selection -->
+        <div class="checklist-section">
+            <h3>Select Ambulance</h3>
+            <select x-model="selectedAmbulance" @change="loadChecklist()">
+                <option value="">Select an ambulance...</option>
+                <template x-for="ambulance in $store.ambulances.ambulances" :key="ambulance.callSign">
+                    <option :value="ambulance.callSign" x-text="ambulance.callSign"></option>
+                </template>
+            </select>
+        </div>
+
+        <!-- Checklist Summary -->
+        <div class="checklist-summary" x-show="selectedAmbulance && checklistItems.length > 0">
+            <h3>📋 Checklist Summary</h3>
+            <div class="summary-stats">
+                <div class="stat-item">
+                    <strong>Complete:</strong> <span x-text="completedCount" class="status-complete"></span>
+                </div>
+                <div class="stat-item">
+                    <strong>Incomplete:</strong> <span x-text="incompleteCount" class="status-incomplete"></span>
+                </div>
+                <div class="stat-item">
+                    <strong>Progress:</strong> <span x-text="progressPercent + '%'" style="color: #2196f3; font-weight: bold;"></span>
+                </div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" 
+                     :style="`width: ${progressPercent}%; background: ${progressBarColor}`"></div>
+            </div>
+        </div>
+
+        <!-- Add New Item Form -->
+        <div class="checklist-section" x-show="selectedAmbulance">
+            <h3>Add New Item</h3>
+            <form @submit.prevent="addChecklistItem()" class="add-item-form">
+                <input type="text" 
+                       x-model="newItemForm.name" 
+                       placeholder="Add new checklist item..." 
+                       required>
+                <div class="quantity-input">
+                    <label for="newItemQuantity">Required</label>
+                    <input type="number" 
+                           x-model="newItemForm.required" 
+                           id="newItemQuantity" 
+                           min="1" 
+                           max="999">
+                </div>
+                <button type="submit">Add Item</button>
+            </form>
+        </div>
+
+        <!-- Checklist Items -->
+        <div class="checklist-section" x-show="selectedAmbulance && checklistItems.length > 0">
+            <h3>Checklist Items</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Required</th>
+                            <th>Current</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-for="(item, index) in checklistItems" :key="index">
+                            <tr>
+                                <td x-text="item.name" style="font-weight: bold;"></td>
+                                <td x-text="item.required" style="text-align: center; font-weight: bold; color: #2196f3;"></td>
+                                <td style="text-align: center;">
+                                    <div class="quantity-controls">
+                                        <button type="button" 
+                                                @click="adjustQuantity(index, -1)" 
+                                                class="quantity-btn">−</button>
+                                        <input type="number" 
+                                               :value="item.current" 
+                                               @input="updateQuantity(index, $event.target.value)"
+                                               min="0" 
+                                               max="999" 
+                                               class="quantity-input-field">
+                                        <button type="button" 
+                                                @click="adjustQuantity(index, 1)" 
+                                                class="quantity-btn">+</button>
+                                    </div>
+                                </td>
+                                <td style="text-align: center; font-size: 1.2rem;"
+                                    :class="item.current >= item.required ? 'status-complete' : 'status-incomplete'">
+                                    <span x-text="item.current >= item.required ? '✅' : '❌'"></span>
+                                </td>
+                                <td style="text-align: center;">
+                                    <button type="button" 
+                                            @click="removeChecklistItem(index)" 
+                                            style="background:#b71c1c; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">
+                                        Remove
+                                    </button>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Bulk Operations -->
+            <div class="button-group" style="margin-top: 1rem;">
+                <button @click="saveChecklist()" class="btn btn-save">💾 Save Checklist</button>
+                <button @click="fillAllRequired()" class="btn btn-fill">✅ Fill All Required</button>
+                <button @click="clearAll()" class="btn btn-clear">🗑️ Clear All</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function checklistPage() {
+            return {
+                selectedAmbulance: '',
+                checklistItems: [],
+                newItemForm: {
+                    name: '',
+                    required: 1
+                },
+                successMessage: '',
+                defaultItems: [
+                    { name: 'Oxygen Cylinder', required: 2, current: 0 },
+                    { name: 'Defibrillator', required: 1, current: 0 },
+                    { name: 'First Aid Kit', required: 1, current: 0 },
+                    { name: 'Stretcher', required: 1, current: 0 },
+                    { name: 'Suction Unit', required: 1, current: 0 },
+                    { name: 'Radio', required: 1, current: 0 },
+                    { name: 'Gloves (pairs)', required: 20, current: 0 },
+                    { name: 'Blankets', required: 4, current: 0 },
+                    { name: 'Saline Bags', required: 6, current: 0 },
+                    { name: 'Sphygmomanometer', required: 1, current: 0 },
+                    { name: 'Bandages', required: 10, current: 0 },
+                    { name: 'Syringes', required: 15, current: 0 }
+                ],
+                
+                get completedCount() {
+                    return this.checklistItems.filter(item => item.current >= item.required).length;
+                },
+                
+                get incompleteCount() {
+                    return this.checklistItems.length - this.completedCount;
+                },
+                
+                get progressPercent() {
+                    if (this.checklistItems.length === 0) return 0;
+                    return Math.round((this.completedCount / this.checklistItems.length) * 100);
+                },
+                
+                get progressBarColor() {
+                    const percent = this.progressPercent;
+                    if (percent === 100) return 'linear-gradient(90deg, #4caf50, #66bb6a)';
+                    if (percent >= 75) return 'linear-gradient(90deg, #8bc34a, #aed581)';
+                    if (percent >= 50) return 'linear-gradient(90deg, #ffc107, #ffeb3b)';
+                    return 'linear-gradient(90deg, #ff9800, #ffb74d)';
+                },
+                
+                init() {
+                    // Check authentication
+                    if (!this.$store.auth.isLoggedIn) {
+                        window.location.href = '../index.html';
+                        return;
+                    }
+                    
+                    // Apply dark mode
+                    if (this.$store.ui.darkMode) {
+                        document.body.classList.add('dark-mode');
+                    }
+                    
+                    // Auto-select user's assigned ambulance if available
+                    if (this.$store.auth.hasAmbulanceAccess) {
+                        this.selectedAmbulance = this.$store.auth.currentUser.assignedAmbulance;
+                        this.loadChecklist();
+                    }
+                },
+                
+                loadChecklist() {
+                    if (!this.selectedAmbulance) {
+                        this.checklistItems = [];
+                        return;
+                    }
+                    
+                    const storageKey = `checklist_items_${this.selectedAmbulance}`;
+                    const stored = localStorage.getItem(storageKey);
+                    
+                    if (stored) {
+                        this.checklistItems = JSON.parse(stored);
+                    } else {
+                        this.checklistItems = [...this.defaultItems];
+                        this.saveChecklistItems();
+                    }
+                },
+                
+                saveChecklistItems() {
+                    if (!this.selectedAmbulance) return;
+                    const storageKey = `checklist_items_${this.selectedAmbulance}`;
+                    localStorage.setItem(storageKey, JSON.stringify(this.checklistItems));
+                },
+                
+                async addChecklistItem() {
+                    if (!this.newItemForm.name.trim()) {
+                        await this.$store.ui.showAlert('Please enter an item name', 'Missing Information');
+                        return;
+                    }
+                    
+                    if (!this.selectedAmbulance) {
+                        await this.$store.ui.showAlert('Please select an ambulance first', 'No Ambulance Selected');
+                        return;
+                    }
+                    
+                    this.checklistItems.push({
+                        name: this.newItemForm.name,
+                        required: this.newItemForm.required,
+                        current: 0
+                    });
+                    
+                    this.saveChecklistItems();
+                    this.newItemForm = { name: '', required: 1 };
+                    this.showSuccessMessage('Item added successfully!');
+                },
+                
+                async removeChecklistItem(index) {
+                    const confirmed = await this.$store.ui.showConfirm('Remove this item?', 'Remove Item');
+                    if (confirmed) {
+                        this.checklistItems.splice(index, 1);
+                        this.saveChecklistItems();
+                        this.showSuccessMessage('Item removed');
+                    }
+                },
+                
+                adjustQuantity(index, change) {
+                    const item = this.checklistItems[index];
+                    item.current = Math.max(0, item.current + change);
+                    this.saveChecklistItems();
+                },
+                
+                updateQuantity(index, value) {
+                    const item = this.checklistItems[index];
+                    item.current = Math.max(0, parseInt(value) || 0);
+                    this.saveChecklistItems();
+                },
+                
+                async fillAllRequired() {
+                    const confirmed = await this.$store.ui.showConfirm('Set all items to their required quantities?', 'Fill All Required');
+                    if (confirmed) {
+                        this.checklistItems.forEach(item => {
+                            item.current = item.required;
+                        });
+                        this.saveChecklistItems();
+                        this.showSuccessMessage('All items filled to required quantities');
+                    }
+                },
+                
+                async clearAll() {
+                    const confirmed = await this.$store.ui.showConfirm('Clear all current quantities to 0?', 'Clear All Quantities');
+                    if (confirmed) {
+                        this.checklistItems.forEach(item => {
+                            item.current = 0;
+                        });
+                        this.saveChecklistItems();
+                        this.showSuccessMessage('All quantities cleared');
+                    }
+                },
+                
+                saveChecklist() {
+                    this.saveChecklistItems();
+                    this.showSuccessMessage('Checklist saved successfully!');
+                },
+                
+                showSuccessMessage(message) {
+                    this.successMessage = message;
+                    setTimeout(() => {
+                        this.successMessage = '';
+                    }, 3000);
+                }
+            }
+        }
+    </script>
+</body>
+</html>

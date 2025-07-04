@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Dashboard - Ambulance PRF System</title>
+  <link rel="stylesheet" href="../assets/css/style.css?v=2">
+  
+  <!-- Alpine.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  
+  <!-- Alpine.js Stores and Components -->
+  <script src="../assets/js/alpine-stores.js?v=1"></script>
+  <script src="../assets/js/alpine-components.js?v=1"></script>
+  <script src="../assets/js/tools.js?v=2"></script>
+  <script src="../assets/js/navigation.js?v=2"></script>
+  <script src="../assets/js/version.js?v=2"></script>
+  <script src="../assets/js/dev-cache-clear.js"></script>
+  
+  <style>
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .user-avatar {
+      width: 50px;
+      height: 50px;
+      background: #1976d2;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+    .user-details h3 {
+      margin: 0;
+      color: #1976d2;
+    }
+    .user-details p {
+      margin: 0;
+      color: #666;
+      font-size: 0.9rem;
+    }
+    .logout-btn {
+      background: #b71c1c !important;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+    }
+    .logout-btn:hover {
+      background: #8e0000 !important;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: #f8f9fa;
+      padding: 1.5rem;
+      border-radius: 8px;
+      text-align: center;
+      border: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .stat-card:hover {
+      border-color: #1976d2;
+      transform: translateY(-2px);
+    }
+    .stat-number {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #1976d2;
+      margin: 0;
+    }
+    .stat-label {
+      color: #666;
+      margin: 0.5rem 0 0 0;
+      font-size: 0.9rem;
+    }
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .action-card {
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 1.5rem;
+      text-align: center;
+      transition: all 0.2s;
+      text-decoration: none;
+      color: inherit;
+    }
+    .action-card:hover {
+      border-color: #1976d2;
+      transform: translateY(-2px);
+      text-decoration: none;
+      color: inherit;
+    }
+    .action-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+    .action-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #1976d2;
+      margin-bottom: 0.5rem;
+    }
+    .action-desc {
+      color: #666;
+      font-size: 0.9rem;
+    }
+    .recent-activity {
+      background: #f8f9fa;
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+    }
+    .activity-item {
+      padding: 0.75rem 0;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .activity-item:last-child {
+      border-bottom: none;
+    }
+    .activity-text {
+      flex: 1;
+    }
+    .activity-time {
+      color: #666;
+      font-size: 0.8rem;
+    }
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+    }
+    .modal-container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+      width: 90%;
+      max-height: calc(100vh - 2rem);
+      overflow-y: auto;
+    }
+    .modal-header {
+      padding: 1.25rem;
+      border-bottom: 2px solid #e0e0e0;
+    }
+    .modal-header h3 {
+      margin: 0;
+      color: #2c3e50;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .modal-body {
+      padding: 1.25rem;
+      line-height: 1.6;
+    }
+    .modal-footer {
+      padding: 1.25rem;
+      border-top: 2px solid #e0e0e0;
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+    }
+    .modal-footer button {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .dark-mode .stat-card {
+      background: #3d3d3d;
+    }
+    .dark-mode .action-card {
+      background: #3d3d3d;
+      border-color: #555;
+    }
+    .dark-mode .recent-activity {
+      background: #3d3d3d;
+    }
+    .dark-mode .activity-item {
+      border-color: #555;
+    }
+    .dark-mode .user-details p,
+    .dark-mode .stat-label,
+    .dark-mode .action-desc,
+    .dark-mode .activity-time {
+      color: #b0b0b0;
+    }
+    .dark-mode .modal-container {
+      background: #1f2937;
+      color: #f9fafb;
+    }
+    .dark-mode .modal-header {
+      border-bottom-color: #374151;
+    }
+    .dark-mode .modal-footer {
+      border-top-color: #374151;
+    }
+    .dark-mode .modal-header h3 {
+      color: #f9fafb;
+    }
+  </style>
+</head>
+<body x-data="dashboardPage()" x-init="init()">
+  <header>
+    <h1>Dashboard</h1>
+    <p x-text="headerSubtitle">Ambulance PRF System Control Center</p>
+  </header>
+  
+
+
+  <main>
+    <div class="dashboard-header">
+      <div class="user-info">
+        <div class="user-avatar" x-text="userInitials"></div>
+        <div class="user-details">
+          <h3 x-text="$store.auth.currentUser?.name || 'Unknown User'"></h3>
+          <p x-text="$store.auth.currentUser?.role || 'Unknown Role'"></p>
+          <p x-text="loginTimeText"></p>
+          <p x-show="$store.auth.currentUser?.assignedAmbulance" 
+             x-text="'Assigned: ' + $store.auth.currentUser?.assignedAmbulance"
+             style="color: #1976d2; font-weight: bold;"></p>
+        </div>
+      </div>
+      <button @click="logout()" class="logout-btn">Logout</button>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number" x-text="stats.ambulanceCount"></div>
+        <div class="stat-label" x-text="stats.ambulanceLabel"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" x-text="stats.prfCount"></div>
+        <div class="stat-label">PRFs Today</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" x-text="stats.checklistCount"></div>
+        <div class="stat-label">Checklists Completed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" x-text="stats.onlineTime"></div>
+        <div class="stat-label">Online Time</div>
+      </div>
+    </div>
+
+    <div class="quick-actions">
+      <a href="ambulance-directory.html" class="action-card" x-show="$store.auth.isAdmin">
+        <div class="action-icon">🚑</div>
+        <div class="action-title">Manage Fleet</div>
+        <div class="action-desc">Add, edit, or view ambulance status</div>
+      </a>
+      <a href="checklist.html" class="action-card">
+        <div class="action-icon">✅</div>
+        <div class="action-title">Daily Checklist</div>
+        <div class="action-desc">Complete equipment and safety checks</div>
+      </a>
+      <a href="prf-form.html" class="action-card">
+        <div class="action-icon">📋</div>
+        <div class="action-title">New PRF</div>
+        <div class="action-desc">Create patient report form</div>
+      </a>
+      <a href="trip-log.html" class="action-card" x-show="$store.auth.currentUser?.assignedAmbulance">
+        <div class="action-icon">🚛</div>
+        <div class="action-title">Trip Log</div>
+        <div class="action-desc">Manage your ambulance trips</div>
+      </a>
+      <a href="settings.html" class="action-card">
+        <div class="action-icon">⚙️</div>
+        <div class="action-title">Settings</div>
+        <div class="action-desc">System preferences and data management</div>
+      </a>
+    </div>
+
+    <div class="recent-activity">
+      <h3>Recent Activity</h3>
+      <div class="activity-list">
+        <template x-for="activity in recentActivities" :key="activity.id">
+          <div class="activity-item">
+            <div class="activity-text" x-text="activity.text"></div>
+            <div class="activity-time" x-text="activity.time"></div>
+          </div>
+        </template>
+        <div x-show="recentActivities.length === 0" class="activity-item">
+          <div class="activity-text">Welcome to the Ambulance PRF System!</div>
+          <div class="activity-time">Just now</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function dashboardPage() {
+      return {
+        headerSubtitle: 'Ambulance PRF System Control Center',
+        stats: {
+          ambulanceCount: 0,
+          ambulanceLabel: 'Active Ambulances',
+          prfCount: 0,
+          checklistCount: 0,
+          onlineTime: '0s'
+        },
+        recentActivities: [],
+        onlineTimeInterval: null,
+        
+        init() {
+          // Check authentication
+          if (!this.$store.auth.isLoggedIn) {
+            window.location.href = '../index.html';
+            return;
+          }
+          
+          // Apply dark mode
+          if (this.$store.ui.darkMode) {
+            document.body.classList.add('dark-mode');
+          }
+          
+          // Load initial data
+          this.loadStats();
+          this.loadRecentActivity();
+          
+          // Setup periodic updates
+          this.setupPeriodicUpdates();
+          
+          // Setup version info
+          this.setupVersionInfo();
+        },
+        
+        get userInitials() {
+          const user = this.$store.auth.currentUser;
+          if (!user?.name) return 'U';
+          return user.name.split(' ').map(n => n[0]).join('');
+        },
+        
+        get loginTimeText() {
+          const user = this.$store.auth.currentUser;
+          if (!user?.loginTime) return 'Login time unknown';
+          
+          try {
+            const loginTime = new Date(user.loginTime);
+            return `Logged in at ${loginTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+          } catch (e) {
+            return 'Login time unknown';
+          }
+        },
+        
+        loadStats() {
+          const ambulances = this.$store.ambulances.list;
+          const prfs = JSON.parse(localStorage.getItem('prfs') || '[]');
+          const user = this.$store.auth.currentUser;
+          
+          // Show different stats based on role
+          if (user?.role === 'Administrator') {
+            this.stats.ambulanceCount = ambulances.length;
+            this.stats.ambulanceLabel = 'Active Ambulances';
+            
+            // Count PRFs from today
+            const today = new Date().toISOString().split('T')[0];
+            const todayPRFs = prfs.filter(prf => prf.incidentDate === today);
+            this.stats.prfCount = todayPRFs.length;
+          } else if (user?.assignedAmbulance) {
+            // For paramedics/EMTs, show stats for their assigned ambulance only
+            this.stats.ambulanceCount = 1;
+            this.stats.ambulanceLabel = 'Your Ambulance';
+            
+            // Count PRFs from today for their ambulance
+            const today = new Date().toISOString().split('T')[0];
+            const todayPRFs = prfs.filter(prf => 
+              prf.incidentDate === today && prf.ambulanceUnit === user.assignedAmbulance
+            );
+            this.stats.prfCount = todayPRFs.length;
+          }
+          
+          // Count completed checklists today
+          let completedChecklists = 0;
+          ambulances.forEach(amb => {
+            const checklist = JSON.parse(localStorage.getItem(`checklist_${amb.callSign}`) || '[]');
+            if (checklist.length > 0 && checklist.some(item => item)) {
+              completedChecklists++;
+            }
+          });
+          this.stats.checklistCount = completedChecklists;
+          
+          // Calculate online time
+          this.updateOnlineTime();
+        },
+        
+        updateOnlineTime() {
+          const user = this.$store.auth.currentUser;
+          if (!user?.loginTime) {
+            this.stats.onlineTime = '0s';
+            return;
+          }
+          
+          try {
+            const loginTime = new Date(user.loginTime);
+            const now = new Date();
+            const onlineSeconds = Math.floor((now - loginTime) / 1000);
+            const hours = Math.floor(onlineSeconds / 3600);
+            const minutes = Math.floor((onlineSeconds % 3600) / 60);
+            const seconds = onlineSeconds % 60;
+            
+            let timeStr = '';
+            if (hours > 0) timeStr += `${hours}h `;
+            if (minutes > 0 || hours > 0) timeStr += `${minutes}m `;
+            timeStr += `${seconds}s`;
+            
+            this.stats.onlineTime = timeStr.trim();
+          } catch (e) {
+            this.stats.onlineTime = '0s';
+          }
+        },
+        
+        loadRecentActivity() {
+          const activities = [];
+          
+          // Add login history
+          const loginHistory = JSON.parse(localStorage.getItem('loginHistory') || '[]');
+          const recentLogins = loginHistory.slice(-3).reverse();
+          
+          recentLogins.forEach((login, index) => {
+            if (login.success) {
+              const time = new Date(login.timestamp);
+              activities.push({
+                id: `login-${index}`,
+                text: `${login.name} (${login.role}) logged in`,
+                time: time.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+              });
+            }
+          });
+          
+          // Add recent PRFs
+          const prfs = JSON.parse(localStorage.getItem('prfs') || '[]');
+          const recentPRFs = prfs.slice(-2).reverse();
+          recentPRFs.forEach((prf, index) => {
+            activities.push({
+              id: `prf-${index}`,
+              text: `PRF created for ${prf.patientName}`,
+              time: prf.incidentTime || 'Unknown time'
+            });
+          });
+          
+          this.recentActivities = activities;
+        },
+        
+        setupPeriodicUpdates() {
+          // Update online time every second
+          this.onlineTimeInterval = setInterval(() => {
+            this.updateOnlineTime();
+          }, 1000);
+          
+          // Update stats every 30 seconds
+          setInterval(() => {
+            this.loadStats();
+            this.loadRecentActivity();
+          }, 30000);
+        },
+        
+        setupVersionInfo() {
+          // Add version info after version.js loads
+          setTimeout(() => {
+            if (window.getVersionInfo) {
+              const versionInfo = window.getVersionInfo();
+              this.headerSubtitle = `Ambulance PRF System Control Center • v${versionInfo.version}`;
+            }
+          }, 100);
+        },
+
+        async logout() {
+          const confirmed = await this.$store.ui.showConfirm(
+            'Are you sure you want to logout?',
+            'Logout Confirmation'
+          );
+          
+          if (confirmed) {
+            this.$store.auth.logout();
+            window.location.href = '../index.html';
+          }
+        },
+        
+        // Clean up intervals when component is destroyed
+        destroy() {
+          if (this.onlineTimeInterval) {
+            clearInterval(this.onlineTimeInterval);
+          }
+        }
+      }
+    }
+  </script>
+</body>
+</html> 
