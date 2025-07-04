@@ -1,24 +1,28 @@
-const CACHE_NAME = 'ambulance-prf-v2';
+const CACHE_NAME = 'ambulance-prf-v3';
 const urlsToCache = [
   './',
   './index.html',
-  './landing.html',
-  './dashboard.html',
-  './prf-form.html',
-  './checklist.html',
-  './trip-log.html',
-  './ambulance-directory.html',
-  './settings.html',
-  './style.css?v=2',
-  './tools.js?v=2',
-  './navigation.js?v=2',
-  './version.js?v=2',
-  './dev-cache-clear.js',
-  './manifest.json',
-  './icon-192.svg',
-  './icon-512.svg',
-  './apple-touch-icon.svg',
-  './favicon.svg'
+  './pages/landing.html',
+  './pages/dashboard.html',
+  './pages/prf-form.html',
+  './pages/checklist.html',
+  './pages/trip-log.html',
+  './pages/ambulance-directory.html',
+  './pages/settings.html',
+  './assets/css/style.css?v=2',
+  './assets/js/alpine-stores.js?v=1',
+  './assets/js/alpine-components.js?v=1',
+  './assets/js/tools.js?v=2',
+  './assets/js/navigation.js?v=2',
+  './assets/js/version.js?v=2',
+  './assets/js/dev-cache-clear.js',
+  './assets/images/front.jpg',
+  './assets/images/back.jpg',
+  './assets/images/icon-192.svg',
+  './assets/images/icon-512.svg',
+  './assets/images/apple-touch-icon.svg',
+  './assets/images/favicon.svg',
+  './manifest.json'
 ];
 
 // Install event - cache resources
